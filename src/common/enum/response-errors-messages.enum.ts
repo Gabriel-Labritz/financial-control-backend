@@ -1,0 +1,16 @@
+export enum ResponseErrorsMessages {
+  USER_EMAIL_ALREADY_EXISTS = 'O email informado já está sendo utilizado.',
+  INTERNAL_ERROR_USER_CREATED = 'Ocorreu um erro ao cadastrar o usuário, tente novamente.',
+  USER_NOT_FOUND = 'O usuário não foi encontrado.',
+  INTERNAL_ERROR_LOAD_USER = 'Erro ao carregar o usuário, tente novamente.',
+  USER_DATA_UPDATE_EMPTY = 'As informações de apelido ou senha devem ser informadas para serem atualizadas.',
+  USER_NICKNAME_IS_EQUAL = 'O apelido informado é igual ao anterior, informe um apelido diferente.',
+  INTERNAL_ERROR_UPDATED_USER = 'Erro ao atualizar o usuário, tente novamente.',
+  INTERNAL_ERROR_DELETED_USER = 'Erro ao excluir a conta, tente novamente.',
+  TRANSACTION_NOT_FOUND = 'A transação não foi encontrada.',
+  INTERNAL_ERROR_CREATED_TRANSACTION = 'Erro ao registrar transação, tente novamente.',
+  INTERNAL_ERROR_LOAD_TRANSACTIONS = 'Erro ao carregar as transações, tente novamente.',
+  INTERNAL_ERROR_LOAD_TRANSACTION = 'Erro ao carregar a transação, tente novamente.',
+  INTERNAL_ERROR_UPDATED_TRANSACTION = 'Erro ao atualizar a transação, tente novamente.',
+  INTERNAL_ERROR_DELETED_TRANSACTION = 'Erro ao remover a transação, tente novamente.',
+}
