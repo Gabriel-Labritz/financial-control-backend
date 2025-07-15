@@ -12,6 +12,8 @@ import { HashingProtocol } from './hashing/hashing.protocol';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigType } from '@nestjs/config';
 import jwtConfig from './config/jwt.config';
+import { ResponseSuccessMessages } from 'src/common/enum/response-success-messages.enum';
+import { ResponseErrorsMessages } from 'src/common/enum/response-errors-messages.enum';
 
 @Injectable()
 export class AuthService {
@@ -29,7 +31,7 @@ export class AuthService {
     const user = await this.userRepository.findOne({ where: { email } });
 
     if (!user) {
-      throw new NotFoundException('Usuário não foi encontrado.');
+      throw new NotFoundException(ResponseErrorsMessages.USER_NOT_FOUND);
     }
 
     const passwordIsValid = await this.hashingService.comparePassword(
@@ -38,14 +40,15 @@ export class AuthService {
     );
 
     if (!passwordIsValid) {
-      throw new UnauthorizedException('A senha informada está incorreta.');
+      throw new UnauthorizedException(
+        ResponseErrorsMessages.INCORRECT_PASSWORD,
+      );
     }
 
-    // assinando o token para entregar ao usuário
     const token = await this.jwtSignAsync(user);
 
     return {
-      message: 'Usuário autenticado com sucesso!',
+      message: ResponseSuccessMessages.USER_AUTHENTICATED,
       accessToken: token,
     };
   }

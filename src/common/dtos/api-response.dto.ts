@@ -1,7 +1,7 @@
 import { Pagination } from './interface/pagination.interface';
 import { Summary } from './interface/summary.interface';
 
-export class ApiResponseDto<T> {
+export class ApiResponseDto<T = any> {
   message: string;
   data?: T;
   summary?: Summary;

@@ -1,5 +1,5 @@
 export interface Summary {
-  totalIncomeMonth: number;
-  totalExpenseMonth: number;
-  balanceOfMonth: number;
+  totalIncome: number;
+  totalExpense: number;
+  balance: number;
 }

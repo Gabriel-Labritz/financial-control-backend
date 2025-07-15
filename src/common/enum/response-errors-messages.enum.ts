@@ -13,4 +13,6 @@ export enum ResponseErrorsMessages {
   INTERNAL_ERROR_LOAD_TRANSACTION = 'Erro ao carregar a transação, tente novamente.',
   INTERNAL_ERROR_UPDATED_TRANSACTION = 'Erro ao atualizar a transação, tente novamente.',
   INTERNAL_ERROR_DELETED_TRANSACTION = 'Erro ao remover a transação, tente novamente.',
+  INCORRECT_PASSWORD = 'A senha informada está incorreta.',
+  INVALID_ID = 'ID informado é inválido',
 }

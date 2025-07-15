@@ -49,9 +49,9 @@ export class TransactionService {
       const newTransaction = this.transactionRepository.create(transactionData);
       await this.transactionRepository.save(newTransaction);
 
-      return new ApiResponseDto<Transaction>({
+      return new ApiResponseDto({
         message: ResponseSuccessMessages.TRANSACTION_CREATED,
-        data: newTransaction,
+        data: transactionData,
       });
     } catch (error) {
       if (error instanceof HttpException) {
@@ -94,8 +94,11 @@ export class TransactionService {
           skip: (page - 1) * limit,
         });
 
+      const summary = calculateTransactionSummary(userTransactions);
+
       return new ApiResponseDto<Transaction[]>({
         message: ResponseSuccessMessages.TRANSACTIONS_LOADED,
+        summary,
         data: userTransactions,
         pagination: {
           currentPage: page,
@@ -129,7 +132,6 @@ export class TransactionService {
     try {
       const user = await this.userService.findUser(tokenPayload);
 
-      // permite usar propriedades da entidade Transaction para montar filtros
       const whereConditionsFilters: FindOptionsWhere<Transaction> = {
         user: { id: user.id },
         createdAt: Between(firstDayOfMonth, lastDayOfMonth),

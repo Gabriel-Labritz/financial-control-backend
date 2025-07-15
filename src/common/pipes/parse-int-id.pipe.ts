@@ -3,6 +3,7 @@ import {
   BadRequestException,
   PipeTransform,
 } from '@nestjs/common';
+import { ResponseErrorsMessages } from '../enum/response-errors-messages.enum';
 
 export class ParseIntIdPipe implements PipeTransform {
   transform(value: string, metadata: ArgumentMetadata) {
@@ -13,7 +14,7 @@ export class ParseIntIdPipe implements PipeTransform {
     const parsedValue = Number(value);
 
     if (isNaN(parsedValue) || parsedValue <= 0) {
-      throw new BadRequestException('ID informado é inválido');
+      throw new BadRequestException(ResponseErrorsMessages.INVALID_ID);
     }
 
     return parsedValue;
