@@ -11,7 +11,7 @@ import { TransactionCategory } from 'src/common/enum/transaction-category.enum';
 import { TransactionType } from 'src/common/enum/transaction-type.enum';
 import { PaginationQueryDto } from './pagination-query.dto';
 
-export class FilterByMonthDto extends PaginationQueryDto {
+export class FilterTransactionsByMonthDto extends PaginationQueryDto {
   @Type(() => Number)
   @IsInt({ message: 'O mês deve ser um número inteiro.' })
   @IsPositive({ message: 'O mês deve ser um número positivo.' })

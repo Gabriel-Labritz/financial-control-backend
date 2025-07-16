@@ -16,10 +16,10 @@ import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { AuthTokenGuard } from 'src/common/guards/auth-token.guard';
 import { TokenPayloadParam } from 'src/common/param/token-payload.param';
 import { TokenPayloadDto } from 'src/auth/dto/token-payload.dto';
-import { FilterByMonthDto } from './dto/filter-by-month.dto';
 import { FilterTransactionDto } from './dto/filter-transaction.dto';
 import { ParseIntIdPipe } from 'src/common/pipes/parse-int-id.pipe';
 import { UpdateTransactionDto } from './dto/update-transaction.dto';
+import { FilterTransactionsByMonthDto } from './dto/filter-transaction-by-month.dto';
 
 @Injectable()
 @UsePipes(ParseIntIdPipe)
@@ -37,7 +37,7 @@ export class TransactionController {
   }
 
   @UseGuards(AuthTokenGuard)
-  @Get()
+  @Get('all')
   findAll(
     @Query() filter: FilterTransactionDto,
     @TokenPayloadParam() tokenPayload: TokenPayloadDto,
@@ -46,9 +46,9 @@ export class TransactionController {
   }
 
   @UseGuards(AuthTokenGuard)
-  @Get('by-month')
+  @Get('filter')
   findByMonth(
-    @Query() filter: FilterByMonthDto,
+    @Query() filter: FilterTransactionsByMonthDto,
     @TokenPayloadParam() tokenPayload: TokenPayloadDto,
   ) {
     return this.transactionService.findByMonth(filter, tokenPayload);

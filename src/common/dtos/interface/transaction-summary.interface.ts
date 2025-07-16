@@ -1,4 +1,4 @@
-export interface Summary {
+export interface TransactionSummary {
   totalIncome: number;
   totalExpense: number;
   balance: number;

@@ -7,10 +7,8 @@ import {
 import { CreateTransactionDto } from './dto/create-transaction.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Transaction } from './entities/transaction.entity';
-import { Between, FindOptionsWhere, Repository } from 'typeorm';
 import { TokenPayloadDto } from 'src/auth/dto/token-payload.dto';
 import { UserService } from 'src/user/user.service';
-import { FilterByMonthDto } from './dto/filter-by-month.dto';
 import { monthDate } from 'src/utils/month-date';
 import { calculateTransactionSummary } from 'src/utils/calculate-transaction-summary';
 import { FilterTransactionDto } from './dto/filter-transaction.dto';
@@ -18,6 +16,9 @@ import { UpdateTransactionDto } from './dto/update-transaction.dto';
 import { ResponseSuccessMessages } from 'src/common/enum/response-success-messages.enum';
 import { ResponseErrorsMessages } from 'src/common/enum/response-errors-messages.enum';
 import { ApiResponseDto } from 'src/common/dtos/api-response.dto';
+import { FilterTransactionsByMonthDto } from './dto/filter-transaction-by-month.dto';
+import { buildTransactionsFilters } from 'src/utils/build-transaction-filters';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class TransactionService {
@@ -70,16 +71,14 @@ export class TransactionService {
     try {
       const user = await this.userService.findUser(tokenPayload);
 
-      const whereConditionsFilters: FindOptionsWhere<Transaction> = {
-        user: { id: user.id },
-      };
-
-      if (type) whereConditionsFilters.type = type;
-      if (category) whereConditionsFilters.category = category;
+      const whereTransactionsFilters = buildTransactionsFilters(user, {
+        type,
+        category,
+      });
 
       const [userTransactions, totalItems] =
         await this.transactionRepository.findAndCount({
-          where: whereConditionsFilters,
+          where: whereTransactionsFilters,
           select: [
             'id',
             'title',
@@ -118,7 +117,10 @@ export class TransactionService {
     }
   }
 
-  async findByMonth(filter: FilterByMonthDto, tokenPayload: TokenPayloadDto) {
+  async findByMonth(
+    filter: FilterTransactionsByMonthDto,
+    tokenPayload: TokenPayloadDto,
+  ) {
     const {
       month = 1,
       year = 2025,
@@ -132,17 +134,18 @@ export class TransactionService {
     try {
       const user = await this.userService.findUser(tokenPayload);
 
-      const whereConditionsFilters: FindOptionsWhere<Transaction> = {
-        user: { id: user.id },
-        createdAt: Between(firstDayOfMonth, lastDayOfMonth),
-      };
-
-      if (type) whereConditionsFilters.type = type;
-      if (category) whereConditionsFilters.category = category;
+      const whereTransactionsFilters = buildTransactionsFilters(user, {
+        type,
+        category,
+        dateRange: {
+          from: firstDayOfMonth,
+          to: lastDayOfMonth,
+        },
+      });
 
       const [monthTransactions, totalItems] =
         await this.transactionRepository.findAndCount({
-          where: whereConditionsFilters,
+          where: whereTransactionsFilters,
           select: [
             'id',
             'title',

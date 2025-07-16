@@ -1,17 +1,17 @@
-import { Pagination } from './interface/pagination.interface';
-import { Summary } from './interface/summary.interface';
+import { PaginationMeta } from './interface/pagination-meta.interface';
+import { TransactionSummary } from './interface/transaction-summary.interface';
 
 export class ApiResponseDto<T = any> {
   message: string;
   data?: T;
-  summary?: Summary;
-  pagination?: Pagination;
+  summary?: TransactionSummary;
+  pagination?: PaginationMeta;
 
   constructor(params: {
     message: string;
     data?: T;
-    summary?: Summary;
-    pagination?: Pagination;
+    summary?: TransactionSummary;
+    pagination?: PaginationMeta;
   }) {
     this.message = params.message;
     if (params.data !== undefined) this.data = params.data;
