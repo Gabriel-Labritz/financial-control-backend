@@ -14,7 +14,7 @@ export class CreateUserDto {
   @MaxLength(50, { message: 'O apelido deve conter no máximo 50 caracteres.' })
   nickName: string;
 
-  @IsEmail()
+  @IsEmail({}, { message: 'O email informado é inválido.' })
   @IsNotEmpty({ message: 'O email é obrigatório.' })
   @MaxLength(50, { message: 'O email deve conter no máximo 50 caracteres.' })
   email: string;

@@ -5,6 +5,8 @@ import { User } from './entities/user.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { HashingProtocol } from 'src/auth/hashing/hashing.protocol';
 import { CreateUserDto } from './dto/create-user.dto';
+import { ApiResponseDto } from 'src/common/dtos/api-response.dto';
+import { ResponseSuccessMessages } from 'src/common/enum/response-success-messages.enum';
 import {
   BadRequestException,
   ConflictException,
@@ -51,300 +53,368 @@ describe('UserService', () => {
   });
 
   describe('create', () => {
-    it('should create a user', async () => {
+    it('should create a successfully user', async () => {
+      // arrange
       const createUserDto: CreateUserDto = {
-        nickName: 'Teste',
-        email: 'teste@teste.com',
-        password: '123456',
+        nickName: 'Testing',
+        email: 'testing@gmail.com',
+        password: 'testing123',
       };
-      const passwordHash = 'HASHDESENHA';
+      const passwordHash = 'HASHINGPASSWORDTEST123';
       const newUser = {
         id: 1,
         nickName: createUserDto.nickName,
         email: createUserDto.email,
-        passwordHash,
-      };
-      const expectedReturn = {
-        message: 'Usuário foi cadastrado com sucesso!',
+        password: passwordHash,
       };
 
-      jest
+      const spyHashPassword = jest
         .spyOn(hashingService, 'hashPassword')
         .mockResolvedValue(passwordHash);
       jest.spyOn(userRepository, 'create').mockReturnValue(newUser as any);
-      jest.spyOn(userRepository, 'save').mockResolvedValue(newUser as any);
+      const spyRepositorySave = jest
+        .spyOn(userRepository, 'save')
+        .mockResolvedValue(newUser as any);
 
+      // action
       const result = await userService.create(createUserDto);
 
-      expect(hashingService.hashPassword).toHaveBeenCalledWith(
-        createUserDto.password,
+      // assert
+      expect(spyHashPassword).toHaveBeenCalledWith(createUserDto.password);
+      expect(spyRepositorySave).toHaveBeenCalledWith(newUser);
+      expect(result).toStrictEqual(
+        new ApiResponseDto({ message: ResponseSuccessMessages.USER_CREATED }),
       );
-      expect(userRepository.create).toHaveBeenCalledWith({
-        nickName: createUserDto.nickName,
-        email: createUserDto.email,
-        password: passwordHash,
-      });
-      expect(userRepository.save).toHaveBeenCalledWith(newUser);
-      expect(result).toEqual(expectedReturn);
     });
 
-    it('should throw a ConflictException when user email is already exists.', async () => {
+    it('should throw a ConflictException if user email already exists', async () => {
+      // arrange
       const createUserDto: CreateUserDto = {
-        nickName: 'Teste',
-        email: 'teste@teste.com',
-        password: '123456',
+        nickName: 'Testing',
+        email: 'testing@gmail.com',
+        password: 'testing123',
       };
 
-      const anyError = new QueryFailedError('', [], new Error());
-      anyError['code'] = '23505';
+      const simulateError = new QueryFailedError('', [], new Error());
+      simulateError['code'] = '23505';
 
-      jest.spyOn(userRepository, 'save').mockRejectedValue(anyError);
+      jest.spyOn(userRepository, 'save').mockRejectedValue(simulateError);
 
+      // assert
       await expect(userService.create(createUserDto)).rejects.toThrow(
         ConflictException,
       );
     });
 
-    it('should throw a error when this error is HttpException', async () => {
+    it('should throw an HttpException', async () => {
+      // arrange
       const createUserDto: CreateUserDto = {
-        nickName: 'Teste',
-        email: 'teste@teste.com',
-        password: '123456',
+        nickName: 'Testing',
+        email: 'testing@gmail.com',
+        password: 'testing123',
       };
+      const httpError = new BadRequestException();
 
-      const anyError = new BadRequestException();
+      jest.spyOn(userRepository, 'save').mockRejectedValue(httpError);
 
-      jest.spyOn(userRepository, 'save').mockRejectedValue(anyError);
-
+      // assert
       await expect(userService.create(createUserDto)).rejects.toThrow(
         HttpException,
       );
     });
 
-    it('should throw InternalServerErrorException for another erros', async () => {
+    it('should throw an InternalServerErrorException for another errors', async () => {
+      // arrange
       const createUserDto: CreateUserDto = {
-        nickName: 'Teste',
-        email: 'teste@teste.com',
-        password: '123456',
+        nickName: 'Testing',
+        email: 'testing@gmail.com',
+        password: 'testing123',
       };
+      const genericError = new Error();
 
-      const anyError = new Error();
+      jest.spyOn(userRepository, 'save').mockRejectedValue(genericError);
 
-      jest.spyOn(userRepository, 'save').mockRejectedValue(anyError);
-
+      // assert
       await expect(userService.create(createUserDto)).rejects.toThrow(
         InternalServerErrorException,
       );
     });
   });
 
-  describe('getProfileUser', () => {
-    it('should return profile user data', async () => {
+  describe('findUser', () => {
+    it('should find and return the logged user data successfully', async () => {
+      // arrange
       const tokenPayload = {
         id: 1,
-        nickName: 'Gabriel',
+        nick_name: 'Testing',
       };
-
-      const userData = {
+      const user = {
         id: tokenPayload.id,
-        nickName: tokenPayload.nickName,
-        email: 'teste@teste.com',
+        nickName: tokenPayload.nick_name,
+        createdAt: new Date(),
+        transactions: [
+          {
+            id: 1,
+            title: 'Testing',
+            amount: 1.95,
+            type: 'expense',
+            category: 'other',
+            createdAt: new Date(),
+          },
+        ],
       };
 
-      jest.spyOn(userRepository, 'findOne').mockResolvedValue(userData as any);
+      const spyUserRepository = jest
+        .spyOn(userRepository, 'findOne')
+        .mockResolvedValue(user as any);
 
-      const result = await userService.getProfileUser(tokenPayload as any);
+      // action
+      const result = await userService.findUser(tokenPayload as any);
 
-      expect(userRepository.findOne).toHaveBeenCalledWith({
+      expect(spyUserRepository).toHaveBeenCalledWith({
         where: { id: tokenPayload.id },
-        select: { id: true, nickName: true, createdAt: true },
+        relations: ['transactions'],
+        select: ['id', 'nickName', 'createdAt', 'transactions'],
       });
-      expect(result).toEqual(userData);
+      expect(result).toBe(user);
     });
 
     it('should throw a NotFoundException when user not found', async () => {
+      // arrange
       const tokenPayload = {
         id: 1,
-        nickName: 'Gabriel',
+        nick_name: 'Testing',
       };
 
-      jest.spyOn(userRepository, 'findOne').mockResolvedValue(null);
-
-      await expect(
-        userService.getProfileUser(tokenPayload as any),
-      ).rejects.toThrow(NotFoundException);
+      // assert
+      await expect(userService.findUser(tokenPayload as any)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
-    it('should throw a error when this error is HttpException', async () => {
+    it('should throw an InternalServerErrorException for another errors', async () => {
+      // arrange
       const tokenPayload = {
         id: 1,
-        nickName: 'Gabriel',
+        nick_name: 'Testing',
       };
+      const genericError = new Error();
 
-      const anyError = new NotFoundException();
+      jest.spyOn(userRepository, 'findOne').mockRejectedValue(genericError);
 
-      jest.spyOn(userRepository, 'findOne').mockRejectedValue(anyError);
-
-      await expect(
-        userService.getProfileUser(tokenPayload as any),
-      ).rejects.toThrow(HttpException);
-    });
-
-    it('should throw a InternalServerErrorException for another erros', async () => {
-      const tokenPayload = {
-        id: 1,
-        nickName: 'Gabriel',
-      };
-
-      const anyError = new Error();
-
-      jest.spyOn(userRepository, 'findOne').mockRejectedValue(anyError as any);
-
-      await expect(
-        userService.getProfileUser(tokenPayload as any),
-      ).rejects.toThrow(InternalServerErrorException);
+      // assert
+      await expect(userService.findUser(tokenPayload as any)).rejects.toThrow(
+        InternalServerErrorException,
+      );
     });
   });
 
   describe('update', () => {
-    it('should update a user', async () => {
-      const updateUserDto: UpdateUserDto = {
-        nickName: 'Teste 2',
-        password: '123456',
-      };
+    it('should update a user logged successfully with nickName and password', async () => {
+      // Arrange
       const tokenPayload = {
         id: 1,
-        nickName: 'Teste',
+        nickName: 'Testing',
       };
-      const userData = {
+      const updateUserDto: UpdateUserDto = {
+        nickName: 'testing update',
+        password: 'testing123',
+      };
+      const user = {
         id: tokenPayload.id,
         nickName: tokenPayload.nickName,
-        email: 'teste@teste.com',
+        password: 'old password',
+        createdAt: new Date(),
+        transactions: [],
       };
-      const passwordHash = 'HASHDASENHA';
-
-      const userDataAfterUpdate = {
-        ...userData,
+      const originalPassword = updateUserDto.password;
+      const passwordHash = 'TESTINGHASHPASSWORD123';
+      const userUpdated = {
+        ...user,
         nickName: updateUserDto.nickName,
         password: passwordHash,
       };
 
-      const expectedReturn = {
-        message: 'Usuário foi atualizado com sucesso!',
-      };
-
-      jest.spyOn(userRepository, 'findOne').mockResolvedValue(userData as any);
-      jest
+      // mocks
+      const spyFindUser = jest
+        .spyOn(userService, 'findUser')
+        .mockResolvedValue(user as any);
+      const spyHashPassword = jest
         .spyOn(hashingService, 'hashPassword')
         .mockResolvedValue(passwordHash);
+      const spySave = jest
+        .spyOn(userRepository, 'save')
+        .mockResolvedValue(userUpdated as any);
 
+      // Action
       const result = await userService.update(
         updateUserDto,
         tokenPayload as any,
       );
 
-      expect(userRepository.findOne).toHaveBeenCalledWith({
-        where: { id: tokenPayload.id },
-      });
-      expect(hashingService.hashPassword).toHaveBeenCalledWith(
-        updateUserDto.password,
+      // Assert
+      expect(spyFindUser).toHaveBeenCalledWith(tokenPayload);
+      expect(spyHashPassword).toHaveBeenCalledWith(originalPassword);
+      expect(user.nickName).toBe(updateUserDto.nickName);
+      expect(user.password).toBe(passwordHash);
+      expect(spySave).toHaveBeenCalledWith(user);
+      expect(result).toStrictEqual(
+        new ApiResponseDto({
+          message: ResponseSuccessMessages.USER_UPDATED,
+        }),
       );
-      expect(userRepository.save).toHaveBeenCalledWith(userDataAfterUpdate);
-      expect(result).toEqual(expectedReturn);
     });
 
-    it('should update only user nick_name', async () => {
-      const updateUserDto: UpdateUserDto = {
-        nickName: 'Novo Apelido',
-      };
+    it('should update a user logged successfully with nickName only', async () => {
+      // arrange
       const tokenPayload = {
         id: 1,
-        nickName: 'Antigo Apelido',
+        nickName: 'old nickName',
       };
-      const userData = {
+      const updateUserDto: UpdateUserDto = {
+        nickName: 'new nickName',
+      };
+      const user = {
         id: tokenPayload.id,
         nickName: tokenPayload.nickName,
-        email: 'teste@teste.com',
-        password: 'senhaAntiga',
+        createdAt: new Date(),
+        transactions: [],
       };
-      const userDataAfterUpdate = {
-        ...userData,
+      const userUpdated = {
+        ...user,
         nickName: updateUserDto.nickName,
       };
-      const expectedReturn = {
-        message: 'Usuário foi atualizado com sucesso!',
-      };
 
-      jest.spyOn(userRepository, 'findOne').mockResolvedValue(userData as any);
-      jest
+      const spyFindUser = jest
+        .spyOn(userService, 'findUser')
+        .mockResolvedValue(user as any);
+      const spySave = jest
         .spyOn(userRepository, 'save')
-        .mockResolvedValue(userDataAfterUpdate as any);
-      jest.spyOn(hashingService, 'hashPassword');
+        .mockResolvedValue(userUpdated as any);
 
+      // action
       const result = await userService.update(
         updateUserDto,
         tokenPayload as any,
       );
 
-      expect(userRepository.findOne).toHaveBeenCalledWith({
-        where: { id: tokenPayload.id },
-      });
-      expect(hashingService.hashPassword).not.toHaveBeenCalled();
-      expect(userRepository.save).toHaveBeenCalledWith(userDataAfterUpdate);
-      expect(result).toEqual(expectedReturn);
+      // assert
+      expect(spyFindUser).toHaveBeenCalledWith(tokenPayload);
+      expect(user.nickName).toBe(updateUserDto.nickName);
+      expect(spySave).toHaveBeenCalledWith(user);
+      expect(result).toStrictEqual(
+        new ApiResponseDto({
+          message: ResponseSuccessMessages.USER_UPDATED,
+        }),
+      );
     });
 
-    it('should throw a NotFoundException when user not found', async () => {
+    it('should update a user logged successfully with password only', async () => {
+      // arrange
+      const tokenPayload = {
+        id: 1,
+        nickName: 'nickName',
+      };
       const updateUserDto: UpdateUserDto = {
-        nickName: 'Teste 2',
-        password: '123456',
+        password: 'new password',
       };
-      const tokenPayload = {
-        id: 1,
-        nickName: 'Gabriel',
-      };
-
-      jest.spyOn(userRepository, 'findOne').mockResolvedValue(null);
-
-      await expect(
-        userService.update(updateUserDto, tokenPayload as any),
-      ).rejects.toThrow(NotFoundException);
-    });
-
-    it('should throw a BadRequestException when user try update with empty data', async () => {
-      const updateUserDto: UpdateUserDto = {};
-      const tokenPayload = {
-        id: 1,
-        nickName: 'Gabriel',
-      };
-      const userData = {
+      const user = {
         id: tokenPayload.id,
         nickName: tokenPayload.nickName,
-        email: 'teste@teste.com',
-        password: 'senhaAntiga',
+        password: 'old password',
+        createdAt: new Date(),
+        transactions: [],
+      };
+      const originalPassword = updateUserDto.password;
+      const passwordHash = 'TESTINGHASHPASSWORD123';
+      const userUpdated = {
+        ...user,
+        password: passwordHash,
       };
 
-      jest.spyOn(userRepository, 'findOne').mockResolvedValue(userData as any);
+      // mocks
+      const spyFindUser = jest
+        .spyOn(userService, 'findUser')
+        .mockResolvedValue(user as any);
+      const spyHashPassword = jest
+        .spyOn(hashingService, 'hashPassword')
+        .mockResolvedValue(passwordHash);
+      const spySave = jest
+        .spyOn(userRepository, 'save')
+        .mockResolvedValue(userUpdated as any);
+
+      // action
+      const result = await userService.update(
+        updateUserDto,
+        tokenPayload as any,
+      );
+
+      // assert
+      expect(spyFindUser).toHaveBeenCalledWith(tokenPayload);
+      expect(spyHashPassword).toHaveBeenCalledWith(originalPassword);
+      expect(user.password).toBe(passwordHash);
+      expect(spySave).toHaveBeenCalledWith(user);
+      expect(result).toStrictEqual(
+        new ApiResponseDto({ message: ResponseSuccessMessages.USER_UPDATED }),
+      );
+    });
+
+    it('should throw a BadRequestException when empty datas', async () => {
+      const tokenPayload = {
+        id: 1,
+        nickName: 'nickName',
+      };
+      const updateUserDto: UpdateUserDto = {};
+      const user = {
+        id: tokenPayload.id,
+        nickName: tokenPayload.nickName,
+        createdAt: new Date(),
+        transactions: [],
+      };
+
+      jest.spyOn(userService, 'findUser').mockResolvedValue(user as any);
 
       await expect(
         userService.update(updateUserDto, tokenPayload as any),
       ).rejects.toThrow(BadRequestException);
     });
 
-    it('should throw a InternalServerErrorException for another erros', async () => {
-      const updateUserDto: UpdateUserDto = {
-        nickName: 'Teste 2',
-        password: '123456',
-      };
+    it('should throw a BadRequestException when nickName is equal', async () => {
       const tokenPayload = {
         id: 1,
-        nickName: 'Gabriel',
+        nickName: 'nickName',
+      };
+      const updateUserDto: UpdateUserDto = {
+        nickName: 'nickName',
+      };
+      const user = {
+        id: tokenPayload.id,
+        nickName: tokenPayload.nickName,
+        createdAt: new Date(),
+        transactions: [],
       };
 
-      const anyError = new Error();
+      jest.spyOn(userService, 'findUser').mockResolvedValue(user as any);
 
-      jest.spyOn(userRepository, 'findOne').mockRejectedValue(anyError as any);
+      await expect(
+        userService.update(updateUserDto, tokenPayload as any),
+      ).rejects.toThrow(BadRequestException);
+    });
 
+    it('should throw an InternalServerErrorException for another errors', async () => {
+      // arrange
+      const tokenPayload = {
+        id: 1,
+        nickName: 'Nickname',
+      };
+      const updateUserDto: UpdateUserDto = {
+        nickName: 'nickName',
+      };
+
+      const genericError = new Error();
+      jest.spyOn(userService, 'findUser').mockRejectedValue(genericError);
+
+      // assert
       await expect(
         userService.update(updateUserDto, tokenPayload as any),
       ).rejects.toThrow(InternalServerErrorException);
@@ -352,72 +422,73 @@ describe('UserService', () => {
   });
 
   describe('delete', () => {
-    it('should delete a user', async () => {
+    it('should delete a user logged successfully', async () => {
+      // arrange
       const tokenPayload = {
         id: 1,
-        nickName: 'Teste',
+        nick_name: 'Testing',
       };
-      const userData = {
+      const user = {
         id: tokenPayload.id,
-        nickName: tokenPayload.nickName,
-        email: 'teste@teste.com',
-      };
-      const expectedReturn = {
-        message: 'O usuário foi excluído com sucesso!',
+        nickName: tokenPayload.nick_name,
+        createdAt: new Date(),
+        transactions: [
+          {
+            id: 1,
+            title: 'Testing',
+            amount: 1.95,
+            type: 'expense',
+            category: 'other',
+            createdAt: new Date(),
+          },
+        ],
       };
 
-      jest.spyOn(userRepository, 'findOne').mockResolvedValue(userData as any);
+      const spyFindUserService = jest
+        .spyOn(userService, 'findUser')
+        .mockResolvedValue(user as any);
+      const spyUserRepositoryDelete = jest
+        .spyOn(userRepository, 'delete')
+        .mockResolvedValue(user.id as any);
 
+      // action
       const result = await userService.delete(tokenPayload as any);
 
-      expect(userRepository.findOne).toHaveBeenCalledWith({
-        where: { id: tokenPayload.id },
-        select: {
-          id: true,
-        },
-      });
-      expect(userRepository.delete).toHaveBeenCalledWith(userData.id);
-      expect(result).toEqual(expectedReturn);
-    });
-
-    it('should throw a NotFoundException when user not found', async () => {
-      const tokenPayload = {
-        id: 1,
-        nickName: 'Gabriel',
-      };
-
-      jest.spyOn(userRepository, 'findOne').mockResolvedValue(null);
-
-      await expect(userService.delete(tokenPayload as any)).rejects.toThrow(
-        NotFoundException,
+      // assert
+      expect(spyFindUserService).toHaveBeenCalledWith(tokenPayload);
+      expect(spyUserRepositoryDelete).toHaveBeenCalledWith(user.id);
+      expect(result).toStrictEqual(
+        new ApiResponseDto({ message: ResponseSuccessMessages.USER_DELETED }),
       );
     });
 
-    it('should throw a error when this error is HttpException', async () => {
+    it('should throw an HttpException', async () => {
+      // arrange
       const tokenPayload = {
         id: 1,
-        nickName: 'Gabriel',
+        nick_name: 'Testing',
       };
+      const httpError = new NotFoundException();
 
-      const anyError = new NotFoundException();
+      jest.spyOn(userService, 'findUser').mockRejectedValue(httpError);
 
-      jest.spyOn(userRepository, 'findOne').mockRejectedValue(anyError);
-
+      // assert
       await expect(userService.delete(tokenPayload as any)).rejects.toThrow(
         HttpException,
       );
     });
 
-    it('should throw a InternalServerErrorException for another erros', async () => {
+    it('should throw an InternalServerErrorException for another errors', async () => {
+      // arrange
       const tokenPayload = {
         id: 1,
-        nickName: 'Gabriel',
+        nick_name: 'Testing',
       };
+      const genericError = new Error();
 
-      const anyError = new Error();
+      jest.spyOn(userService, 'findUser').mockRejectedValue(genericError);
 
-      jest.spyOn(userRepository, 'findOne').mockRejectedValue(anyError as any);
-
+      // assert
       await expect(userService.delete(tokenPayload as any)).rejects.toThrow(
         InternalServerErrorException,
       );
