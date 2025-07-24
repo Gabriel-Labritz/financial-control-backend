@@ -123,7 +123,7 @@ describe('UserService', () => {
       );
     });
 
-    it('should throw an InternalServerErrorException for another errors', async () => {
+    it('should throw an InternalServerErrorException for others errors', async () => {
       // arrange
       const createUserDto: CreateUserDto = {
         nickName: 'Testing',
