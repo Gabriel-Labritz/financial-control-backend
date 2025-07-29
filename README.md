@@ -21,7 +21,7 @@ Api desenvolvida em **NestJs** para gerenciar transações financeiras do usuár
 - **Injeção de dependência & mocks para os testes**
 
 # 📁 Estrutura (resumo)
-``
+``` bash
 src/
 ├── auth/                # Cadastro e login
 ├── user/                # Usuários
@@ -29,6 +29,5 @@ src/
 ├── common/              # Enums, filtros, dtos comuns
 ├── utils/               # Funções auxiliares (ex.: calcular saldo)
 └── tests/               # Testes unitários organizados por módulo
-
-``
+```
 
