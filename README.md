@@ -20,3 +20,15 @@ Api desenvolvida em **NestJs** para gerenciar transações financeiras do usuár
 - **Testes unitários com Jest**
 - **Injeção de dependência & mocks para os testes**
 
+# 📁 Estrutura (resumo)
+``
+src/
+├── auth/                # Cadastro e login
+├── user/                # Usuários
+├── transaction/         # Transações financeiras
+├── common/              # Enums, filtros, dtos comuns
+├── utils/               # Funções auxiliares (ex.: calcular saldo)
+└── tests/               # Testes unitários organizados por módulo
+
+``
+
