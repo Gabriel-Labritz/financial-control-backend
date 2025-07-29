@@ -2,7 +2,7 @@
 Api desenvolvida em **NestJs** para gerenciar transações financeiras do usuário, incluindo cadastro, autenticação, controle de despesas e receitas, filtro mensal, categoria e tipo.
 - Projeto criado com foco em aprendizado prático de backend, seguindo boas práticas de arquitetura, testes unitários e validação de dados.
 
-# ✨ Funcionalidades
+## ✨ Funcionalidades
 - **Cadastro e login do usuário (JWT)**
 - **Criação, listagem, atualização e remoção de transações feitas pelo usuário**
 - **Filtros por mês, tipo (expense / income) e categoria**
@@ -10,7 +10,7 @@ Api desenvolvida em **NestJs** para gerenciar transações financeiras do usuár
 - **Validação completa dos dados via DTOs**
 - **Cobertura extensiva de testes unitários**
 
-# 🛠 Tecnologias & Conceitos
+## 🛠 Tecnologias & Conceitos
 - **NestJS + TypeScript**
 - **PostgreSql + TypeORM**
 - **JWT (Autenticação)**
@@ -20,13 +20,13 @@ Api desenvolvida em **NestJs** para gerenciar transações financeiras do usuár
 - **Testes unitários com Jest**
 - **Injeção de dependência & mocks para os testes**
 
-# 🌱 Diferenciais técnicos
+## 🌱 Diferenciais técnicos
 - **Testes unitários das príncipais funcionalidades de services e controllers, inclusive DTOs e utils**
 - **Filtros com Between e paginação**
 - **Arquitetura limpa (separação clara por camadas)**
 - **Uso de helpers e utils para lógica isolada e testável**
 
-# 📁 Estrutura (resumo)
+## 📁 Estrutura (resumo)
 ``` bash
 src/
 ├── auth/                # Autenticação
