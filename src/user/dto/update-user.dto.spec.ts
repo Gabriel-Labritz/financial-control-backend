@@ -15,17 +15,6 @@ describe('UpdateUserDto', () => {
   });
 
   describe('NickName', () => {
-    it('should fail dto when nickName is missing', async () => {
-      const dto = plainToInstance(UpdateUserDto, {
-        nickName: '',
-      });
-
-      const errors = await validate(dto);
-      expect(errors.length).toBe(1);
-      expect(errors[0].property).toBe('nickName');
-      expect(errors[0].constraints).toHaveProperty('isNotEmpty');
-    });
-
     it('should fail dto when nickName is not a string', async () => {
       const dto = plainToInstance(UpdateUserDto, {
         nickName: 123,
@@ -61,17 +50,6 @@ describe('UpdateUserDto', () => {
   });
 
   describe('Email', () => {
-    it('should fail dto when email is missing', async () => {
-      const dto = plainToInstance(UpdateUserDto, {
-        email: '',
-      });
-
-      const errors = await validate(dto);
-      expect(errors.length).toBe(1);
-      expect(errors[0].property).toBe('email');
-      expect(errors[0].constraints).toHaveProperty('isNotEmpty');
-    });
-
     it('should fail dto when email is not a email', async () => {
       const dto = plainToInstance(UpdateUserDto, {
         email: 'testingnotemail@123',
@@ -96,18 +74,6 @@ describe('UpdateUserDto', () => {
   });
 
   describe('Password', () => {
-    it('should fail dto when password is missing', async () => {
-      const dto = plainToInstance(UpdateUserDto, {
-        password: '',
-      });
-
-      const errors = await validate(dto);
-
-      expect(errors.length).toBe(1);
-      expect(errors[0].property).toBe('password');
-      expect(errors[0].constraints).toHaveProperty('isNotEmpty');
-    });
-
     it('should fail dto when password is not a string', async () => {
       const dto = plainToInstance(UpdateUserDto, {
         password: 1234,

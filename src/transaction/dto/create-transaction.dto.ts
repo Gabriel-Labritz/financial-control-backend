@@ -26,12 +26,14 @@ export class CreateTransactionDto {
   @IsEnum(TransactionType, {
     message: 'Informe o tipo da transação: (renda ou despesa)',
   })
+  @IsNotEmpty()
   type: TransactionType;
 
   @IsEnum(TransactionCategory, {
     message:
       'Informe a categoria da transação: (alimentação, transporte, saúde, entreterimento, salário ou outro).',
   })
+  @IsNotEmpty()
   category: TransactionCategory;
 
   @IsString({ message: 'A descrição deve ser uma string.' })
