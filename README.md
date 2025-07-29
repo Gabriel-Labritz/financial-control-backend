@@ -52,5 +52,25 @@ src/
 ```
 ## 📄 .env.example
 **Crie um arquivo chamado .env na raiz do projeto seguindo esse exemplo**
+```bash
+  #DATABASE CONFIG
 
+  DATABASE_TYPE=your database type
+  DATABASE_HOST=your host
+  DATABASE_PORT=port
+  DATABASE_USERNAME=your database username
+  DATABASE_DB=your database
+  DATABASE_PASSWORD=password database
+  DATABASE_AUTO_LOAD_ENTITIES=true
+  DATABASE_SYNCHRONIZE=true
+
+  #APP
+  APP_PORT=your app port
+
+  #JWT CONFIG
+  JWT_SECRET=your secret here!
+  JWT_AUDIENCE=localhost
+  JWT_ISSUER=localhost
+  JWT_TTL=time to jwt token expire (3600s)
+```
 
