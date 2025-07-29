@@ -50,3 +50,7 @@ src/
   # Rode o projeto
   npm run start:dev
 ```
+## 📄 .env.example
+**Crie um arquivo chamado .env na raiz do projeto seguindo esse exemplo**
+
+
