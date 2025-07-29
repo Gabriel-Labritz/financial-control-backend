@@ -37,3 +37,16 @@ src/
 ```
 
 ## ⚙ Como rodar localmente
+``` bash
+  # clone o repositório
+  git clone https://github.com/Gabriel-Labritz/financial-control-backend
+
+  # acessa a pasta
+  cd finantial-control-app
+
+  # instale as dependências
+  npm install
+
+  # Rode o projeto
+  npm run start:dev
+```
