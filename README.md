@@ -7,7 +7,16 @@ Api desenvolvida em **NestJs** para gerenciar transações financeiras do usuár
 - **Criação, listagem, atualização e remoção de transações feitas pelo usuário**
 - **Filtros por mês, tipo (expense / income) e categoria**
 - **Cálculo automático de resumo financeiro (saldo, total de entradas e saídas)**
-- **Validação completa do dados via DTOs**
+- **Validação completa dos dados via DTOs**
 - **Cobertura extensiva de testes unitários**
 
+# 🛠 Tecnologias & Conceitos
+- **NestJS + TypeScript**
+- **PostgreSql + TypeORM**
+- **JWT (Autenticação)**
+- **Validação com class-validator**
+- **Separação de camadas: Controller, Service, DTOs, Entity, Utils**
+- **Uso de Guards para rotas privadas**
+- **Testes unitários com Jest**
+- **Injeção de dependência & mocks para os testes**
 
