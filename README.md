@@ -35,3 +35,5 @@ src/
 ├── common/              # Enums, filtros, dtos comuns
 ├── utils/               # Funções auxiliares (ex.: calcular saldo)
 ```
+
+## ⚙ Como rodar localmente
