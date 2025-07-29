@@ -54,7 +54,6 @@ src/
 **Crie um arquivo chamado .env na raiz do projeto seguindo esse exemplo**
 ```bash
   #DATABASE CONFIG
-
   DATABASE_TYPE=your database type
   DATABASE_HOST=your host
   DATABASE_PORT=port
