@@ -20,7 +20,7 @@ Api desenvolvida em **NestJs** para gerenciar transações financeiras do usuár
 - **Testes unitários com Jest**
 - **Injeção de dependência & mocks para os testes**
 
-#🌱 Diferenciais técnicos
+# 🌱 Diferenciais técnicos
 - **Testes unitários das príncipais funcionalidades de services e controllers, inclusive DTOs e utils**
 - **Filtros com Between e paginação**
 - **Arquitetura limpa (separação clara por camadas)**
