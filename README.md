@@ -39,7 +39,7 @@ src/
 ## ⚙ Como rodar localmente
 ``` bash
   # clone o repositório
-  git clone https://github.com/Gabriel-Labritz/financial-control-backend
+  git clone https://github.com/Gabriel-Labritz/financial-control-backend.git
 
   # acessa a pasta
   cd finantial-control-app
