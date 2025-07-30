@@ -72,4 +72,7 @@ src/
   JWT_ISSUER=localhost
   JWT_TTL=time to jwt token expire (3600s)
 ```
+## 🧪 Testes
+- **Cobertura 100%** nos serviços, controllers, DTOs, filtros e funções utilitárias
+- ****
 
