@@ -74,5 +74,9 @@ src/
 ```
 ## 🧪 Testes
 - **Cobertura 100%** nos serviços, controllers, DTOs, filtros e funções utilitárias
-- ****
+- Testes de:
+  - Fluxos de sucesso
+  - Tratamento de erros (ex.: usuário não encontrado, senha incorreta)
+  - Validações de dados (ex: campos obrigatórios, enums, tamanhos)
+- Mocks de serviços, helpers e repositórios
 
