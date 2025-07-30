@@ -42,7 +42,7 @@ src/
   git clone https://github.com/Gabriel-Labritz/financial-control-backend.git
 
   # acessa a pasta
-  cd finantial-control-app
+  cd finantial-control-backend
 
   # instale as dependências
   npm install
