@@ -91,4 +91,5 @@ src/
 ```
 
 ## 🙋‍♂️ Autor
-
+- [GitHub](https://github.com/Gabriel-Labritz)
+- [LinkedIn](https://www.linkedin.com/in/gabriel-labritz-199499229/)
