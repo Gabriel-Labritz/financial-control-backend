@@ -80,3 +80,8 @@ src/
   - Validações de dados (ex: campos obrigatórios, enums, tamanhos)
 - Mocks de serviços, helpers e repositórios
 
+⚙ Para rodar os testes
+```bash
+  npm run test:watch
+```
+
