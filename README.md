@@ -85,7 +85,7 @@ src/
   npm run test:watch
 ```
 
-- Para gerar o relátorio de coverage...
+### 📊Para gerar o relátorio de coverage...
 ```bash
   npm run test:cov  
 ```
