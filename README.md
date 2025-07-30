@@ -33,7 +33,7 @@ src/
 ├── user/                # Usuário
 ├── transaction/         # Transações financeiras
 ├── common/              # Enums, filtros, dtos comuns
-├── utils/               # Funções auxiliares (ex.: calcular saldo)
+├── utils/               # Funções utilitárias
 ```
 
 ## ⚙ Como rodar localmente
@@ -85,8 +85,10 @@ src/
   npm run test:watch
 ```
 
-### 📊Para gerar o relátorio de coverage...
+### 📊 Para gerar o relátorio de coverage...
 ```bash
   npm run test:cov  
 ```
+
+## 🙋‍♂️ Autor
 
