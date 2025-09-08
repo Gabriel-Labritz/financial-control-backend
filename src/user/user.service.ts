@@ -10,6 +10,7 @@ import { QueryFailedError, Repository } from 'typeorm';
 import { HashingProtocol } from 'src/auth/hashing/hashing-protocol';
 import { CreateUserDto } from './dto/create_user.dto';
 import { responseErrorsUserMessages } from 'src/common/enums/erros/errors_users/response_errors_messages';
+import { responseUserSuccessMessages } from 'src/common/enums/success/success_user/response_user_success';
 
 @Injectable()
 export class UserService {
@@ -23,18 +24,15 @@ export class UserService {
     try {
       const passwordHash = await this.hashingService.hashPassword(password);
 
-      const userData = {
+      const newUser = this.userRepository.create({
         name,
         email,
         password: passwordHash,
-      } as CreateUserDto;
-
-      const newUser = this.userRepository.create(userData);
+      });
       await this.userRepository.save(newUser);
 
       return {
-        message: 'Sua conta foi criada com sucesso!',
-        userData,
+        message: responseUserSuccessMessages.USER_CREATED,
       };
     } catch (err) {
       if (
@@ -55,5 +53,8 @@ export class UserService {
         responseErrorsUserMessages.INTERNAL_SERVER_ERROR,
       );
     }
+  }
+  findAll() {
+    return 'this route is a test to auth guard';
   }
 }
