@@ -12,7 +12,7 @@ import { Request } from 'express';
 import jwtConfig from 'src/auth/config/jwt.config';
 import { responseErrorsUserMessages } from '../enums/erros/errors_users/response_errors_messages';
 
-interface TokenPayload {
+export interface TokenPayload {
   id: string;
   name: string;
   iat: number;

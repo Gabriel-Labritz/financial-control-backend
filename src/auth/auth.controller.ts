@@ -28,6 +28,7 @@ export class AuthController {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       maxAge: cookieMaxAge,
+      path: '/',
     });
 
     return { message };

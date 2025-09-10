@@ -54,7 +54,4 @@ export class UserService {
       );
     }
   }
-  findAll() {
-    return 'this route is a test to auth guard';
-  }
 }
