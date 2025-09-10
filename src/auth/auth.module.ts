@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { HashingProtocol } from './hashing/hashing-protocol';
 import { HashingService } from './hashing/hashing.service';
 import { AuthController } from './auth.controller';
@@ -9,6 +9,7 @@ import { ConfigModule } from '@nestjs/config';
 import jwtConfig from './config/jwt.config';
 import { JwtModule } from '@nestjs/jwt';
 
+@Global()
 @Module({
   imports: [
     TypeOrmModule.forFeature([User]),

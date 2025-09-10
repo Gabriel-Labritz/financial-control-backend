@@ -22,7 +22,7 @@ export class AuthController {
     const { message, accessToken } = await this.authService.signIn(signInDto);
     const cookieMaxAge = this.jwtConfiguration.jwtTtl * 1000;
 
-    // define httpOnly
+    // define cookie httpOnly
     res.cookie('jwt', accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
