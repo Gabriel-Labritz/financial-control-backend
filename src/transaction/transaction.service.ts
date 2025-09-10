@@ -1,10 +1,16 @@
-import { Injectable } from '@nestjs/common';
+import {
+  HttpException,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { TokenPayloadDto } from 'src/auth/dto/token_payload.dto';
 import { CreateTransactionDto } from './dto/create_transaction.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Transaction } from './entity/Transaction';
 import { Repository } from 'typeorm';
 import { UserService } from 'src/user/user.service';
+import { responseTransactionsSuccessMessages } from 'src/common/enums/success/success_transactions/response_transactions_success_messages.enum';
+import { responseTransactionsErrorsMessage } from 'src/common/enums/erros/errors_transactions/response_transactions_errors_message.enum';
 
 @Injectable()
 export class TransactionService {
@@ -13,15 +19,36 @@ export class TransactionService {
     private readonly transactionRepository: Repository<Transaction>,
     private readonly userService: UserService,
   ) {}
-  create(
+
+  async create(
     createTransactionDto: CreateTransactionDto,
     tokenPayload: TokenPayloadDto,
   ) {
     const { title, amount, type, category, description } = createTransactionDto;
 
     try {
-      console.log(createTransactionDto);
-      return 'this route will create a transaction';
-    } catch (err) {}
+      const newTransaction = this.transactionRepository.create({
+        title,
+        amount,
+        type,
+        category,
+        description,
+        user: { id: tokenPayload.id },
+      });
+      await this.transactionRepository.save(newTransaction);
+
+      return {
+        message: responseTransactionsSuccessMessages.TRANSACTION_CREATED,
+        newTransaction,
+      };
+    } catch (err) {
+      if (err instanceof HttpException) {
+        throw err;
+      }
+
+      throw new InternalServerErrorException(
+        responseTransactionsErrorsMessage.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 }
