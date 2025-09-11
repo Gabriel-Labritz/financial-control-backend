@@ -1,6 +1,6 @@
-import { TransactionCategories } from 'src/common/enums/transaction/transaction_categories.enum';
-import { TransactionTypes } from 'src/common/enums/transaction/transaction_types.enum';
-import { User } from 'src/user/entity/User';
+import { TransactionCategories } from '../../common/enums/transaction/transaction_categories.enum';
+import { TransactionTypes } from '../../common/enums/transaction/transaction_types.enum';
+import { User } from '../../user/entity/User';
 import {
   Column,
   CreateDateColumn,

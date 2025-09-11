@@ -7,10 +7,10 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entity/User';
 import { QueryFailedError, Repository } from 'typeorm';
-import { HashingProtocol } from 'src/auth/hashing/hashing-protocol';
+import { HashingProtocol } from '../auth/hashing/hashing-protocol';
 import { CreateUserDto } from './dto/create_user.dto';
-import { responseErrorsUserMessages } from 'src/common/enums/erros/errors_users/response_errors_messages';
-import { responseUserSuccessMessages } from 'src/common/enums/success/success_user/response_user_success';
+import { responseErrorsUserMessages } from '../common/enums/erros/errors_users/response_errors_messages';
+import { responseUserSuccessMessages } from '../common/enums/success/success_user/response_user_success';
 
 @Injectable()
 export class UserService {

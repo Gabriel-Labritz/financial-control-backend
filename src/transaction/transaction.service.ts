@@ -8,9 +8,9 @@ import { CreateTransactionDto } from './dto/create_transaction.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Transaction } from './entity/Transaction';
 import { Repository } from 'typeorm';
-import { UserService } from 'src/user/user.service';
-import { responseTransactionsSuccessMessages } from 'src/common/enums/success/success_transactions/response_transactions_success_messages.enum';
-import { responseTransactionsErrorsMessage } from 'src/common/enums/erros/errors_transactions/response_transactions_errors_message.enum';
+import { UserService } from '../user/user.service';
+import { responseTransactionsSuccessMessages } from '../common/enums/success/success_transactions/response_transactions_success_messages.enum';
+import { responseTransactionsErrorsMessage } from '../common/enums/erros/errors_transactions/response_transactions_errors_message.enum';
 
 @Injectable()
 export class TransactionService {
