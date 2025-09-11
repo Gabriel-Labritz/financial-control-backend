@@ -4,7 +4,7 @@ import { SignInDto } from './dto/sign_in.dto';
 import type { Response } from 'express';
 import jwtConfig from './config/jwt.config';
 import type { ConfigType } from '@nestjs/config';
-import { responseUserSuccessMessages } from 'src/common/enums/success/success_user/response_user_success';
+import { responseUserSuccessMessages } from '../common/enums/success/success_user/response_user_success';
 
 @Controller('auth')
 export class AuthController {

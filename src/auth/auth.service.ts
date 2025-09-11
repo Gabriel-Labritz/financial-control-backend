@@ -8,14 +8,14 @@ import {
 } from '@nestjs/common';
 import { SignInDto } from './dto/sign_in.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { User } from 'src/user/entity/User';
+import { User } from '../user/entity/User';
 import { Repository } from 'typeorm';
 import { HashingProtocol } from './hashing/hashing-protocol';
 import { JwtService } from '@nestjs/jwt';
 import type { ConfigType } from '@nestjs/config';
 import jwtConfig from './config/jwt.config';
-import { responseErrorsUserMessages } from 'src/common/enums/erros/errors_users/response_errors_messages';
-import { responseUserSuccessMessages } from 'src/common/enums/success/success_user/response_user_success';
+import { responseErrorsUserMessages } from '../common/enums/erros/errors_users/response_errors_messages';
+import { responseUserSuccessMessages } from '../common/enums/success/success_user/response_user_success';
 
 @Injectable()
 export class AuthService {

@@ -9,7 +9,7 @@ import {
 import type { ConfigType } from '@nestjs/config';
 import { JsonWebTokenError, JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
-import jwtConfig from 'src/auth/config/jwt.config';
+import jwtConfig from '../../auth/config/jwt.config';
 import { responseErrorsUserMessages } from '../enums/erros/errors_users/response_errors_messages';
 
 export interface TokenPayload {

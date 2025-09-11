@@ -7,8 +7,8 @@ import {
   IsString,
   MaxLength,
 } from 'class-validator';
-import { TransactionCategories } from 'src/common/enums/transaction/transaction_categories.enum';
-import { TransactionTypes } from 'src/common/enums/transaction/transaction_types.enum';
+import { TransactionCategories } from '../../common/enums/transaction/transaction_categories.enum';
+import { TransactionTypes } from '../../common/enums/transaction/transaction_types.enum';
 
 export class CreateTransactionDto {
   @IsString({ message: 'O títule deve ser uma string.' })
