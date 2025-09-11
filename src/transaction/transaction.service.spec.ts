@@ -91,7 +91,7 @@ describe('TransactionService', () => {
         newTransaction: expectedNewTransaction,
       });
     });
-    it('should throw HttpException when a http errors occurs', async () => {
+    it('should throw an HttpException when http errors occurs', async () => {
       // arranges
       const createTransactionDto: CreateTransactionDto = {
         title: 'Testing',
@@ -115,7 +115,7 @@ describe('TransactionService', () => {
       ).rejects.toThrow(HttpException);
     });
 
-    it('should throw InternalServerErrorException when a unknown errors occurs', async () => {
+    it('should throw an InternalServerErrorException when an unknown errors occurs', async () => {
       // arranges
       const createTransactionDto: CreateTransactionDto = {
         title: 'Testing',

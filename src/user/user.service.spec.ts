@@ -48,7 +48,7 @@ describe('UserService', () => {
   });
 
   describe('create', () => {
-    it('should create a user successfully', async () => {
+    it('should create an user successfully', async () => {
       // arranges
       const createUserDto: CreateUserDto = {
         name: 'Jonh',
@@ -104,7 +104,7 @@ describe('UserService', () => {
       );
     });
 
-    it('should throw HttpException when a http errors occurs', async () => {
+    it('should throw an HttpException when http errors occurs', async () => {
       // arranges
       const createUserDto: CreateUserDto = {
         name: 'Jonh',
@@ -122,7 +122,7 @@ describe('UserService', () => {
       );
     });
 
-    it('should throw InternalServerException when a unknown errors occurs', async () => {
+    it('should throw an InternalServerException when an unknown errors occurs', async () => {
       // arranges
       const createUserDto: CreateUserDto = {
         name: 'Jonh',
