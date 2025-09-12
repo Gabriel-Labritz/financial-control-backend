@@ -11,6 +11,7 @@ import { Repository } from 'typeorm';
 import { UserService } from '../user/user.service';
 import { responseTransactionsSuccessMessages } from '../common/enums/success/success_transactions/response_transactions_success_messages.enum';
 import { responseTransactionsErrorsMessage } from '../common/enums/erros/errors_transactions/response_transactions_errors_message.enum';
+import { PaginationDto } from './dto/pagination.dto';
 
 @Injectable()
 export class TransactionService {
@@ -48,6 +49,48 @@ export class TransactionService {
 
       throw new InternalServerErrorException(
         responseTransactionsErrorsMessage.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async findAll(pagination: PaginationDto, tokenPayload: TokenPayloadDto) {
+    const { limit = 10, page = 1 } = pagination;
+
+    try {
+      const [userTransactions, totalItems] =
+        await this.transactionRepository.findAndCount({
+          where: { user: { id: tokenPayload.id } },
+          select: [
+            'id',
+            'title',
+            'amount',
+            'type',
+            'category',
+            'description',
+            'createdAt',
+          ],
+          order: { createdAt: 'DESC' },
+          take: limit,
+          skip: (page - 1) * limit,
+        });
+
+      return {
+        message: responseTransactionsSuccessMessages.TRANSACTIONS_LOADED,
+        userTransactions,
+        pagination: {
+          current_page: page,
+          items_per_page: limit,
+          totalItems,
+          total_pages: Math.ceil(totalItems / limit),
+        },
+      };
+    } catch (err) {
+      if (err instanceof HttpException) {
+        throw err;
+      }
+
+      throw new InternalServerErrorException(
+        responseTransactionsErrorsMessage.LOAD_TRANSACTION_ERROR,
       );
     }
   }

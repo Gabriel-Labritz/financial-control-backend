@@ -14,6 +14,7 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { randomUUID } from 'crypto';
+import { PaginationDto } from './dto/pagination.dto';
 
 describe('TransactionService', () => {
   let transactionService: TransactionService;
@@ -30,6 +31,7 @@ describe('TransactionService', () => {
           useValue: {
             create: jest.fn(),
             save: jest.fn(),
+            findAndCount: jest.fn(),
           },
         },
         {
@@ -136,6 +138,115 @@ describe('TransactionService', () => {
       // action and assert
       await expect(
         transactionService.create(createTransactionDto, tokenPayload as any),
+      ).rejects.toThrow(InternalServerErrorException);
+    });
+  });
+
+  describe('findAll', () => {
+    it('should return all transaction from user logged with pagination', async () => {
+      // arranges
+      const pagination: PaginationDto = {
+        limit: 10,
+        page: 1,
+      };
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Jonh',
+      };
+      const transactions = [
+        {
+          id: randomUUID(),
+          title: 'testing transaction 1',
+        },
+        {
+          id: randomUUID(),
+          title: 'testing transction 2',
+        },
+      ];
+      const totalItems = 2;
+
+      // mocks
+      const spyFindAndCount = jest
+        .spyOn(transactionRepository, 'findAndCount')
+        .mockResolvedValue([transactions as any, totalItems]);
+
+      // action
+      const result = await transactionService.findAll(
+        pagination,
+        tokenPayload as any,
+      );
+
+      // asserts
+      expect(spyFindAndCount).toHaveBeenCalledWith({
+        where: { user: { id: tokenPayload.id } },
+        select: [
+          'id',
+          'title',
+          'amount',
+          'type',
+          'category',
+          'description',
+          'createdAt',
+        ],
+        order: { createdAt: 'DESC' },
+        take: pagination.limit,
+        skip: (pagination.page! - 1) * pagination.limit!,
+      });
+      expect(result).toEqual({
+        message: responseTransactionsSuccessMessages.TRANSACTIONS_LOADED,
+        userTransactions: transactions,
+        pagination: {
+          current_page: pagination.page,
+          items_per_page: pagination.limit,
+          totalItems,
+          total_pages: Math.ceil(totalItems / pagination.limit!),
+        },
+      });
+    });
+
+    it('should throw an HttpException when http error occurs', async () => {
+      // arranges
+      const pagination: PaginationDto = {
+        limit: 10,
+        page: 1,
+      };
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Jonh',
+      };
+      const httpError = new BadRequestException();
+
+      // mocks
+      jest
+        .spyOn(transactionRepository, 'findAndCount')
+        .mockRejectedValue(httpError);
+
+      // action and asserts
+      await expect(
+        transactionService.findAll(pagination, tokenPayload as any),
+      ).rejects.toThrow(HttpException);
+    });
+
+    it('should throw an InternalServerErrorException when unknown error occurs', async () => {
+      // arranges
+      const pagination: PaginationDto = {
+        limit: 10,
+        page: 1,
+      };
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Jonh',
+      };
+      const unknownError = new Error();
+
+      // mocks
+      jest
+        .spyOn(transactionRepository, 'findAndCount')
+        .mockRejectedValue(unknownError);
+
+      // action and asserts
+      await expect(
+        transactionService.findAll(pagination, tokenPayload as any),
       ).rejects.toThrow(InternalServerErrorException);
     });
   });
