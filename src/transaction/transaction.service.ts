@@ -2,6 +2,7 @@ import {
   HttpException,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
 import { TokenPayloadDto } from 'src/auth/dto/token_payload.dto';
 import { CreateTransactionDto } from './dto/create_transaction.dto';
@@ -91,6 +92,33 @@ export class TransactionService {
 
       throw new InternalServerErrorException(
         responseTransactionsErrorsMessage.LOAD_TRANSACTION_ERROR,
+      );
+    }
+  }
+
+  async findOne(id: string, tokenPayload: TokenPayloadDto) {
+    try {
+      const transaction = await this.transactionRepository.findOne({
+        where: { id, user: { id: tokenPayload.id } },
+      });
+
+      if (!transaction) {
+        throw new NotFoundException(
+          responseTransactionsErrorsMessage.TRANSACTION_NOT_FOUND,
+        );
+      }
+
+      return {
+        message: responseTransactionsSuccessMessages.TRANSACTION_LOADED,
+        transaction,
+      };
+    } catch (err) {
+      if (err instanceof HttpException) {
+        throw err;
+      }
+
+      throw new InternalServerErrorException(
+        responseTransactionsErrorsMessage.ERROR_LOAD_TRANSACTION,
       );
     }
   }

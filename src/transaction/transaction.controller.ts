@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { TransactionService } from './transaction.service';
 import { AuthGuard } from '../common/guards/auth.guard';
 import { CreateTransactionDto } from './dto/create_transaction.dto';
@@ -24,5 +33,13 @@ export class TransactionController {
     @TokenPayloadParam() tokenPayload: TokenPayloadDto,
   ) {
     return this.transactionService.findAll(pagination, tokenPayload);
+  }
+
+  @Get(':id')
+  findOneTransaction(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @TokenPayloadParam() tokenPayload: TokenPayloadDto,
+  ) {
+    return this.transactionService.findOne(id, tokenPayload);
   }
 }

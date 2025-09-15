@@ -12,6 +12,7 @@ import {
   BadRequestException,
   HttpException,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { PaginationDto } from './dto/pagination.dto';
@@ -32,6 +33,7 @@ describe('TransactionService', () => {
             create: jest.fn(),
             save: jest.fn(),
             findAndCount: jest.fn(),
+            findOne: jest.fn(),
           },
         },
         {
@@ -247,6 +249,93 @@ describe('TransactionService', () => {
       // action and asserts
       await expect(
         transactionService.findAll(pagination, tokenPayload as any),
+      ).rejects.toThrow(InternalServerErrorException);
+    });
+  });
+
+  describe('findOne', () => {
+    it('should return transaction from user logged', async () => {
+      // arranges
+      const id = randomUUID();
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Jonh',
+      };
+      const transaction = {
+        id: randomUUID(),
+        title: 'testing',
+      };
+
+      // mocks
+      const spyFindOne = jest
+        .spyOn(transactionRepository, 'findOne')
+        .mockResolvedValue(transaction as any);
+
+      // action
+      const result = await transactionService.findOne(id, tokenPayload as any);
+
+      // asserts
+      expect(spyFindOne).toHaveBeenCalledWith({
+        where: { id, user: { id: tokenPayload.id } },
+      });
+      expect(result).toEqual({
+        message: responseTransactionsSuccessMessages.TRANSACTION_LOADED,
+        transaction,
+      });
+    });
+
+    it('should throw a NotFoundException when transaction not found', async () => {
+      // arranges
+      const id = randomUUID();
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Jonh',
+      };
+
+      // mocks
+      jest.spyOn(transactionRepository, 'findOne').mockResolvedValue(null);
+
+      // action
+      await expect(
+        transactionService.findOne(id, tokenPayload as any),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw an HttpException when http error occurs', async () => {
+      // arranges
+      const id = randomUUID();
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Jonh',
+      };
+      const httpError = new NotFoundException();
+
+      // mocks
+      jest.spyOn(transactionRepository, 'findOne').mockRejectedValue(httpError);
+
+      // action
+      await expect(
+        transactionService.findOne(id, tokenPayload as any),
+      ).rejects.toThrow(HttpException);
+    });
+
+    it('should throw an InternalServerErrorException when an unknown error occurs', async () => {
+      // arranges
+      const id = randomUUID();
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Jonh',
+      };
+      const unknownError = new Error();
+
+      // mocks
+      jest
+        .spyOn(transactionRepository, 'findOne')
+        .mockRejectedValue(unknownError);
+
+      // action
+      await expect(
+        transactionService.findOne(id, tokenPayload as any),
       ).rejects.toThrow(InternalServerErrorException);
     });
   });

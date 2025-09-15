@@ -1,11 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { TransactionController } from './transaction.controller';
 import { TransactionService } from './transaction.service';
-import {
-  BadRequestException,
-  ExecutionContext,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, ExecutionContext } from '@nestjs/common';
 import { Request } from 'express';
 import { AuthGuard } from '../common/guards/auth.guard';
 import { randomUUID } from 'crypto';
@@ -40,6 +36,7 @@ describe('TransactionController', () => {
           useValue: {
             create: jest.fn(),
             findAll: jest.fn(),
+            findOne: jest.fn(),
           },
         },
       ],
@@ -142,7 +139,7 @@ describe('TransactionController', () => {
         },
       ];
       const expectedResponse = {
-        message: 'transaction successfult lodded',
+        message: 'transaction successfuly loaded',
         transactions,
       };
 
@@ -186,6 +183,43 @@ describe('TransactionController', () => {
       await expect(
         controller.findAllUserTransactions(pagination, tokenPayload as any),
       ).rejects.toThrow(errorMessage);
+    });
+  });
+
+  describe('(findOne) :id', () => {
+    it('should call transactionService.findOne with transaction id from param, tokenPayload and return expected data', async () => {
+      // arranges
+      const id = randomUUID();
+
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Jonh',
+      };
+
+      const transaction = {
+        id: randomUUID(),
+        title: 'testing transaction',
+      };
+
+      const expectedResponse = {
+        message: 'transaction successfuly loaded',
+        transaction,
+      };
+
+      // mocks
+      const spyFindOneService = jest
+        .spyOn(transactionService, 'findOne')
+        .mockResolvedValue(expectedResponse as any);
+
+      // action
+      const result = await controller.findOneTransaction(
+        id,
+        tokenPayload as any,
+      );
+
+      // asserts
+      expect(spyFindOneService).toHaveBeenCalledWith(id, tokenPayload);
+      expect(result).toEqual(expectedResponse);
     });
   });
 });
