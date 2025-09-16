@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseUUIDPipe,
@@ -41,5 +42,13 @@ export class TransactionController {
     @TokenPayloadParam() tokenPayload: TokenPayloadDto,
   ) {
     return this.transactionService.findOne(id, tokenPayload);
+  }
+
+  @Delete('delete/:id')
+  deleteTransaction(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @TokenPayloadParam() tokenPayload: TokenPayloadDto,
+  ) {
+    return this.transactionService.remove(id, tokenPayload);
   }
 }

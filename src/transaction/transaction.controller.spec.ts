@@ -1,7 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { TransactionController } from './transaction.controller';
 import { TransactionService } from './transaction.service';
-import { BadRequestException, ExecutionContext } from '@nestjs/common';
+import {
+  BadRequestException,
+  ExecutionContext,
+  NotFoundException,
+} from '@nestjs/common';
 import { Request } from 'express';
 import { AuthGuard } from '../common/guards/auth.guard';
 import { randomUUID } from 'crypto';
@@ -37,6 +41,7 @@ describe('TransactionController', () => {
             create: jest.fn(),
             findAll: jest.fn(),
             findOne: jest.fn(),
+            remove: jest.fn(),
           },
         },
       ],
@@ -220,6 +225,87 @@ describe('TransactionController', () => {
       // asserts
       expect(spyFindOneService).toHaveBeenCalledWith(id, tokenPayload);
       expect(result).toEqual(expectedResponse);
+    });
+
+    it('should throw an HttpException when the transactionService.findOne throw an error', async () => {
+      // arranges
+      const id = randomUUID();
+
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Jonh',
+      };
+
+      const errorMessage = 'transaction not found';
+
+      // mocks
+      jest
+        .spyOn(transactionService, 'findOne')
+        .mockRejectedValue(new NotFoundException(errorMessage));
+
+      // actions and asserts
+      await expect(
+        controller.findOneTransaction(id, tokenPayload as any),
+      ).rejects.toThrow(NotFoundException);
+      await expect(
+        controller.findOneTransaction(id, tokenPayload as any),
+      ).rejects.toThrow(errorMessage);
+    });
+  });
+
+  describe('delete:id', () => {
+    it('should call transactionService.remove with transaction id from param, tokenPayload and return expected data', async () => {
+      // arranges
+      const id = randomUUID();
+
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Jonh',
+      };
+
+      const expectedResponse = {
+        message: 'transaction removed successfully!',
+      };
+
+      // mocks
+      const spyRemove = jest
+        .spyOn(transactionService, 'remove')
+        .mockResolvedValue(expectedResponse as any);
+
+      // action
+      const result = await controller.deleteTransaction(
+        id,
+        tokenPayload as any,
+      );
+
+      // asserts
+      expect(spyRemove).toHaveBeenCalledWith(id, tokenPayload);
+      expect(result).toEqual(expectedResponse);
+    });
+
+    it('should throw an HttpException when the transactionService.remove throw an error', async () => {
+      // arranges
+      const id = randomUUID();
+
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Jonh',
+      };
+
+      const errorMessage = 'transaction not found';
+
+      // mocks
+      jest
+        .spyOn(transactionService, 'remove')
+        .mockRejectedValue(new NotFoundException(errorMessage));
+
+      // action and asserts
+      await expect(
+        controller.deleteTransaction(id, tokenPayload as any),
+      ).rejects.toThrow(NotFoundException);
+      await expect(
+        controller.deleteTransaction(id, tokenPayload as any),
+      ).rejects.toThrow(errorMessage);
     });
   });
 });

@@ -122,4 +122,23 @@ export class TransactionService {
       );
     }
   }
+
+  async remove(id: string, tokenPayload: TokenPayloadDto) {
+    try {
+      const { transaction } = await this.findOne(id, tokenPayload);
+      await this.transactionRepository.delete(transaction.id);
+
+      return {
+        message: responseTransactionsSuccessMessages.TRANSACTION_REMOVED,
+      };
+    } catch (err) {
+      if (err instanceof HttpException) {
+        throw err;
+      }
+
+      throw new InternalServerErrorException(
+        responseTransactionsErrorsMessage.ERROR_TRANSACTION_REMOVE,
+      );
+    }
+  }
 }

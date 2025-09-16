@@ -34,6 +34,7 @@ describe('TransactionService', () => {
             save: jest.fn(),
             findAndCount: jest.fn(),
             findOne: jest.fn(),
+            delete: jest.fn(),
           },
         },
         {
@@ -336,6 +337,77 @@ describe('TransactionService', () => {
       // action
       await expect(
         transactionService.findOne(id, tokenPayload as any),
+      ).rejects.toThrow(InternalServerErrorException);
+    });
+  });
+
+  describe('remove', () => {
+    it('should remove a transaction from user logged', async () => {
+      // arranges
+      const id = randomUUID();
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Jonh',
+      };
+      const userTransaction = {
+        id,
+        title: 'testing',
+      };
+
+      // mocks
+      const spyFindOneTransaction = jest
+        .spyOn(transactionService, 'findOne')
+        .mockResolvedValue({ transaction: userTransaction } as any);
+      const spyDelete = jest
+        .spyOn(transactionRepository, 'delete')
+        .mockResolvedValue({ affected: 1 } as any);
+
+      // action
+      const result = await transactionService.remove(id, tokenPayload as any);
+
+      // asserts
+      expect(spyFindOneTransaction).toHaveBeenCalledWith(id, tokenPayload);
+      expect(spyDelete).toHaveBeenCalledWith(userTransaction.id);
+      expect(result).toEqual({
+        message: responseTransactionsSuccessMessages.TRANSACTION_REMOVED,
+      });
+    });
+
+    it('should throw an HttpException when an http error ocurrs', async () => {
+      // arranges
+      const id = randomUUID();
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Jonh',
+      };
+
+      const httpError = new NotFoundException();
+
+      // mocks
+      jest.spyOn(transactionService, 'findOne').mockRejectedValue(httpError);
+
+      // action and asserts
+      await expect(
+        transactionService.remove(id, tokenPayload as any),
+      ).rejects.toThrow(HttpException);
+    });
+
+    it('should throw an InternalServerErrorException when an unknown error ocurrs', async () => {
+      // arranges
+      const id = randomUUID();
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Jonh',
+      };
+
+      const unknownError = new Error();
+
+      // mocks
+      jest.spyOn(transactionService, 'findOne').mockRejectedValue(unknownError);
+
+      // action and asserts
+      await expect(
+        transactionService.remove(id, tokenPayload as any),
       ).rejects.toThrow(InternalServerErrorException);
     });
   });
