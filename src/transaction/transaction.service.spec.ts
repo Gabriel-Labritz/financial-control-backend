@@ -16,6 +16,7 @@ import {
 } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { PaginationDto } from './dto/pagination.dto';
+import { UpdateTransactionDto } from './dto/update_transaction.dto';
 
 describe('TransactionService', () => {
   let transactionService: TransactionService;
@@ -56,7 +57,7 @@ describe('TransactionService', () => {
   });
 
   describe('create', () => {
-    it('should create a transaction from user logged', async () => {
+    it('should create a transaction from user logged in', async () => {
       // arranges
       const createTransactionDto: CreateTransactionDto = {
         title: 'Testing',
@@ -146,7 +147,7 @@ describe('TransactionService', () => {
   });
 
   describe('findAll', () => {
-    it('should return all transaction from user logged with pagination', async () => {
+    it('should return all transaction from user logged in with pagination', async () => {
       // arranges
       const pagination: PaginationDto = {
         limit: 10,
@@ -255,7 +256,7 @@ describe('TransactionService', () => {
   });
 
   describe('findOne', () => {
-    it('should return transaction from user logged', async () => {
+    it('should return transaction from user logged in', async () => {
       // arranges
       const id = randomUUID();
       const tokenPayload = {
@@ -341,8 +342,128 @@ describe('TransactionService', () => {
     });
   });
 
+  describe('update', () => {
+    it('should update the transaction from user logged in', async () => {
+      // arranges
+      const id = randomUUID();
+      const updateTransactionDto: UpdateTransactionDto = {
+        title: 'new title',
+        description: 'new description',
+      };
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Jonh',
+      };
+      const userTransaction = {
+        id,
+        title: 'old title',
+        description: 'old description',
+      };
+      const transactionUpdated = Object.assign(
+        userTransaction,
+        updateTransactionDto,
+      );
+
+      // mocks
+      const spyFindOne = jest
+        .spyOn(transactionService, 'findOne')
+        .mockResolvedValue({ transaction: userTransaction } as any);
+      const spySave = jest
+        .spyOn(transactionRepository, 'save')
+        .mockResolvedValue(transactionUpdated as any);
+
+      // action
+      const result = await transactionService.update(
+        id,
+        updateTransactionDto,
+        tokenPayload as any,
+      );
+
+      // asserts
+      expect(spyFindOne).toHaveBeenCalledWith(id, tokenPayload);
+      expect(spySave).toHaveBeenCalledWith(transactionUpdated);
+      expect(result).toEqual({
+        message: responseTransactionsSuccessMessages.TRANSACTION_UPDATED,
+        transaction: transactionUpdated,
+      });
+    });
+
+    it('should throw a BadRequestException when request body is empty', async () => {
+      // arranges
+      const id = randomUUID();
+      const updateTransactionDto: UpdateTransactionDto = {};
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Jonh',
+      };
+
+      // action and asserts
+      await expect(
+        transactionService.update(
+          id,
+          updateTransactionDto,
+          tokenPayload as any,
+        ),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw an HttpException when an http error ocurrs', async () => {
+      // arranges
+      const id = randomUUID();
+      const updateTransactionDto: UpdateTransactionDto = {
+        title: 'new title',
+        description: 'new description',
+      };
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Jonh',
+      };
+
+      const httpError = new NotFoundException();
+
+      // mocks
+      jest.spyOn(transactionService, 'findOne').mockRejectedValue(httpError);
+
+      // action and asserts
+      await expect(
+        transactionService.update(
+          id,
+          updateTransactionDto,
+          tokenPayload as any,
+        ),
+      ).rejects.toThrow(HttpException);
+    });
+
+    it('should throw an InternalServerErrorException when an unknown error ocurrs', async () => {
+      // arranges
+      const id = randomUUID();
+      const updateTransactionDto: UpdateTransactionDto = {
+        title: 'new title',
+        description: 'new description',
+      };
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Jonh',
+      };
+
+      const unknownError = new Error();
+
+      // mocks
+      jest.spyOn(transactionService, 'findOne').mockRejectedValue(unknownError);
+
+      // action and asserts
+      await expect(
+        transactionService.update(
+          id,
+          updateTransactionDto,
+          tokenPayload as any,
+        ),
+      ).rejects.toThrow(InternalServerErrorException);
+    });
+  });
+
   describe('remove', () => {
-    it('should remove a transaction from user logged', async () => {
+    it('should remove a transaction from user logged in', async () => {
       // arranges
       const id = randomUUID();
       const tokenPayload = {

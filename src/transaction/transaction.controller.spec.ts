@@ -13,6 +13,7 @@ import { CreateTransactionDto } from './dto/create_transaction.dto';
 import { TransactionTypes } from '../common/enums/transaction/transaction_types.enum';
 import { TransactionCategories } from '../common/enums/transaction/transaction_categories.enum';
 import { PaginationDto } from './dto/pagination.dto';
+import { UpdateTransactionDto } from './dto/update_transaction.dto';
 
 const mockAuthGuard = {
   canActivate: jest.fn((context: ExecutionContext) => {
@@ -41,6 +42,7 @@ describe('TransactionController', () => {
             create: jest.fn(),
             findAll: jest.fn(),
             findOne: jest.fn(),
+            update: jest.fn(),
             remove: jest.fn(),
           },
         },
@@ -249,6 +251,75 @@ describe('TransactionController', () => {
       ).rejects.toThrow(NotFoundException);
       await expect(
         controller.findOneTransaction(id, tokenPayload as any),
+      ).rejects.toThrow(errorMessage);
+    });
+  });
+
+  describe('update:id', () => {
+    it('should call transactionService.update with transaction id from param, update DTO, tokenPayload and return expected data', async () => {
+      // arranges
+      const id = randomUUID();
+      const updateTransactionDto: UpdateTransactionDto = {
+        title: 'testing',
+      };
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Jonh',
+      };
+      const expectedResponse = {
+        message: 'transaction updated successfully!',
+      };
+
+      // mocks
+      const spyUpdate = jest
+        .spyOn(transactionService, 'update')
+        .mockResolvedValue(expectedResponse as any);
+
+      // action
+      const result = await controller.updateTransaction(
+        id,
+        updateTransactionDto,
+        tokenPayload as any,
+      );
+
+      // asserts
+      expect(spyUpdate).toHaveBeenCalledWith(
+        id,
+        updateTransactionDto,
+        tokenPayload,
+      );
+      expect(result).toEqual(expectedResponse);
+    });
+
+    it('should throw an HttpException when the transactionService.update throw an error', async () => {
+      // arranges
+      const id = randomUUID();
+      const updateTransactionDto: UpdateTransactionDto = {};
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Jonh',
+      };
+      const errorMessage = 'empty data';
+
+      // mocks
+      jest
+        .spyOn(transactionService, 'update')
+        .mockRejectedValue(new BadRequestException(errorMessage));
+
+      // action and asserts
+      await expect(
+        controller.updateTransaction(
+          id,
+          updateTransactionDto,
+          tokenPayload as any,
+        ),
+      ).rejects.toThrow(BadRequestException);
+      await expect(
+        controller.updateTransaction(
+          id,
+          updateTransactionDto,
+          tokenPayload as any,
+        ),
       ).rejects.toThrow(errorMessage);
     });
   });

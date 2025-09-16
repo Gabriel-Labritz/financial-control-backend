@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   HttpException,
   Injectable,
   InternalServerErrorException,
@@ -13,6 +14,7 @@ import { UserService } from '../user/user.service';
 import { responseTransactionsSuccessMessages } from '../common/enums/success/success_transactions/response_transactions_success_messages.enum';
 import { responseTransactionsErrorsMessage } from '../common/enums/erros/errors_transactions/response_transactions_errors_message.enum';
 import { PaginationDto } from './dto/pagination.dto';
+import { UpdateTransactionDto } from './dto/update_transaction.dto';
 
 @Injectable()
 export class TransactionService {
@@ -119,6 +121,41 @@ export class TransactionService {
 
       throw new InternalServerErrorException(
         responseTransactionsErrorsMessage.ERROR_LOAD_TRANSACTION,
+      );
+    }
+  }
+
+  async update(
+    id: string,
+    updateTransactionDto: UpdateTransactionDto,
+    tokenPayload: TokenPayloadDto,
+  ) {
+    try {
+      if (Object.keys(updateTransactionDto).length === 0) {
+        throw new BadRequestException(
+          responseTransactionsErrorsMessage.ERROR_TRANSACTION_UPDATE_EMPTY,
+        );
+      }
+
+      const { transaction } = await this.findOne(id, tokenPayload);
+      const transactionUpdated = Object.assign(
+        transaction,
+        updateTransactionDto,
+      );
+
+      await this.transactionRepository.save(transactionUpdated);
+
+      return {
+        message: responseTransactionsSuccessMessages.TRANSACTION_UPDATED,
+        transaction: transactionUpdated,
+      };
+    } catch (err) {
+      if (err instanceof HttpException) {
+        throw err;
+      }
+
+      throw new InternalServerErrorException(
+        responseTransactionsErrorsMessage.ERROR_TRANSACTION_UPDATE,
       );
     }
   }
