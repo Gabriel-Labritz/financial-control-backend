@@ -1,6 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { TransactionService } from './transaction.service';
-import { UserService } from '../user/user.service';
 import { Repository } from 'typeorm';
 import { Transaction } from './entity/Transaction';
 import { getRepositoryToken } from '@nestjs/typeorm';
@@ -20,7 +19,6 @@ import { UpdateTransactionDto } from './dto/update_transaction.dto';
 
 describe('TransactionService', () => {
   let transactionService: TransactionService;
-  let userService: UserService;
   let transactionRepository: Repository<Transaction>;
 
   beforeEach(async () => {
@@ -36,11 +34,8 @@ describe('TransactionService', () => {
             findAndCount: jest.fn(),
             findOne: jest.fn(),
             delete: jest.fn(),
+            find: jest.fn(),
           },
-        },
-        {
-          provide: UserService,
-          useValue: {},
         },
       ],
     }).compile();
@@ -49,7 +44,6 @@ describe('TransactionService', () => {
     transactionRepository = module.get<Repository<Transaction>>(
       getRepositoryToken(Transaction),
     );
-    userService = module.get<UserService>(UserService);
   });
 
   it('should be defined', () => {
@@ -97,7 +91,7 @@ describe('TransactionService', () => {
         newTransaction: expectedNewTransaction,
       });
     });
-    it('should throw an HttpException when http errors occurs', async () => {
+    it('should throw HttpException when http errors occurs', async () => {
       // arranges
       const createTransactionDto: CreateTransactionDto = {
         title: 'Testing',
@@ -121,7 +115,7 @@ describe('TransactionService', () => {
       ).rejects.toThrow(HttpException);
     });
 
-    it('should throw an InternalServerErrorException when an unknown errors occurs', async () => {
+    it('should throw InternalServerErrorException when an unknown errors occurs', async () => {
       // arranges
       const createTransactionDto: CreateTransactionDto = {
         title: 'Testing',
@@ -208,7 +202,7 @@ describe('TransactionService', () => {
       });
     });
 
-    it('should throw an HttpException when http error occurs', async () => {
+    it('should throw HttpException when a http error occurs', async () => {
       // arranges
       const pagination: PaginationDto = {
         limit: 10,
@@ -231,7 +225,7 @@ describe('TransactionService', () => {
       ).rejects.toThrow(HttpException);
     });
 
-    it('should throw an InternalServerErrorException when unknown error occurs', async () => {
+    it('should throw InternalServerErrorException when an unknown error occurs', async () => {
       // arranges
       const pagination: PaginationDto = {
         limit: 10,
@@ -303,7 +297,7 @@ describe('TransactionService', () => {
       ).rejects.toThrow(NotFoundException);
     });
 
-    it('should throw an HttpException when http error occurs', async () => {
+    it('should throw HttpException when http error occurs', async () => {
       // arranges
       const id = randomUUID();
       const tokenPayload = {
@@ -321,7 +315,7 @@ describe('TransactionService', () => {
       ).rejects.toThrow(HttpException);
     });
 
-    it('should throw an InternalServerErrorException when an unknown error occurs', async () => {
+    it('should throw InternalServerErrorException when an unknown error occurs', async () => {
       // arranges
       const id = randomUUID();
       const tokenPayload = {
@@ -407,7 +401,7 @@ describe('TransactionService', () => {
       ).rejects.toThrow(BadRequestException);
     });
 
-    it('should throw an HttpException when an http error ocurrs', async () => {
+    it('should throw HttpException when an http error occurs', async () => {
       // arranges
       const id = randomUUID();
       const updateTransactionDto: UpdateTransactionDto = {
@@ -434,7 +428,7 @@ describe('TransactionService', () => {
       ).rejects.toThrow(HttpException);
     });
 
-    it('should throw an InternalServerErrorException when an unknown error ocurrs', async () => {
+    it('should throw InternalServerErrorException when an unknown error occurs', async () => {
       // arranges
       const id = randomUUID();
       const updateTransactionDto: UpdateTransactionDto = {
@@ -494,7 +488,7 @@ describe('TransactionService', () => {
       });
     });
 
-    it('should throw an HttpException when an http error ocurrs', async () => {
+    it('should throw a HttpException when http error occurs', async () => {
       // arranges
       const id = randomUUID();
       const tokenPayload = {
@@ -513,7 +507,7 @@ describe('TransactionService', () => {
       ).rejects.toThrow(HttpException);
     });
 
-    it('should throw an InternalServerErrorException when an unknown error ocurrs', async () => {
+    it('should throw InternalServerErrorException when an unknown error occurs', async () => {
       // arranges
       const id = randomUUID();
       const tokenPayload = {
@@ -529,6 +523,81 @@ describe('TransactionService', () => {
       // action and asserts
       await expect(
         transactionService.remove(id, tokenPayload as any),
+      ).rejects.toThrow(InternalServerErrorException);
+    });
+  });
+
+  describe('findAllTransactionByUserId', () => {
+    it('should return all transactions from user logged in', async () => {
+      // arranges
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Jonh',
+      };
+
+      const userTransactions = [
+        {
+          id: randomUUID(),
+          title: 'testing 1',
+        },
+        {
+          id: randomUUID(),
+          title: 'testing 1',
+        },
+      ];
+
+      // mocks
+      const spyFind = jest
+        .spyOn(transactionRepository, 'find')
+        .mockResolvedValue(userTransactions as any);
+
+      // action
+      const result = await transactionService.findAllTransactionByUserId(
+        tokenPayload as any,
+      );
+
+      // asserts
+      expect(spyFind).toHaveBeenCalledWith({
+        where: { user: { id: tokenPayload.id } },
+      });
+      expect(result).toEqual(userTransactions);
+    });
+
+    it('should throw a HttpException when http error occurs', async () => {
+      // arranges
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Jonh',
+      };
+
+      const httpError = new NotFoundException();
+
+      // mocks
+
+      jest.spyOn(transactionRepository, 'find').mockRejectedValue(httpError);
+
+      // action and asserts
+      await expect(
+        transactionService.findAllTransactionByUserId(tokenPayload as any),
+      ).rejects.toThrow(HttpException);
+    });
+
+    it('should throw InternalServerErrorException when an unknown error occurs', async () => {
+      // arranges
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Jonh',
+      };
+
+      const unknownError = new Error();
+
+      // mocks
+
+      jest.spyOn(transactionRepository, 'find').mockRejectedValue(unknownError);
+
+      // action and asserts
+      await expect(
+        transactionService.findAllTransactionByUserId(tokenPayload as any),
       ).rejects.toThrow(InternalServerErrorException);
     });
   });

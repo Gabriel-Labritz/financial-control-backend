@@ -92,7 +92,7 @@ describe('TransactionController', () => {
       expect(result).toEqual(expectedResponse);
     });
 
-    it('should throw an HttpException when the transactionService throw an error', async () => {
+    it('should throw HttpException when the transactionService throw an error', async () => {
       // arranges
       const createTransactionDto = {
         title: 'testing',
@@ -166,7 +166,7 @@ describe('TransactionController', () => {
       expect(result).toEqual(expectedResponse);
     });
 
-    it('should throw an HttpException when the transactionService.findAll throw an error', async () => {
+    it('should throw HttpException when the transactionService.findAll throw an error', async () => {
       // arranges
       const pagination: PaginationDto = {
         limit: 10,
@@ -229,7 +229,7 @@ describe('TransactionController', () => {
       expect(result).toEqual(expectedResponse);
     });
 
-    it('should throw an HttpException when the transactionService.findOne throw an error', async () => {
+    it('should throw HttpException when the transactionService.findOne throw an error', async () => {
       // arranges
       const id = randomUUID();
 
@@ -291,7 +291,7 @@ describe('TransactionController', () => {
       expect(result).toEqual(expectedResponse);
     });
 
-    it('should throw an HttpException when the transactionService.update throw an error', async () => {
+    it('should throw HttpException when the transactionService.update throw an error', async () => {
       // arranges
       const id = randomUUID();
       const updateTransactionDto: UpdateTransactionDto = {};
@@ -354,7 +354,7 @@ describe('TransactionController', () => {
       expect(result).toEqual(expectedResponse);
     });
 
-    it('should throw an HttpException when the transactionService.remove throw an error', async () => {
+    it('should throw HttpException when the transactionService.remove throw an error', async () => {
       // arranges
       const id = randomUUID();
 

@@ -10,7 +10,6 @@ import { CreateTransactionDto } from './dto/create_transaction.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Transaction } from './entity/Transaction';
 import { Repository } from 'typeorm';
-import { UserService } from '../user/user.service';
 import { responseTransactionsSuccessMessages } from '../common/enums/success/success_transactions/response_transactions_success_messages.enum';
 import { responseTransactionsErrorsMessage } from '../common/enums/erros/errors_transactions/response_transactions_errors_message.enum';
 import { PaginationDto } from './dto/pagination.dto';
@@ -21,7 +20,6 @@ export class TransactionService {
   constructor(
     @InjectRepository(Transaction)
     private readonly transactionRepository: Repository<Transaction>,
-    private readonly userService: UserService,
   ) {}
 
   async create(
@@ -175,6 +173,24 @@ export class TransactionService {
 
       throw new InternalServerErrorException(
         responseTransactionsErrorsMessage.ERROR_TRANSACTION_REMOVE,
+      );
+    }
+  }
+
+  async findAllTransactionByUserId(tokenPayload: TokenPayloadDto) {
+    try {
+      const userTransactions = await this.transactionRepository.find({
+        where: { user: { id: tokenPayload.id } },
+      });
+
+      return userTransactions;
+    } catch (err) {
+      if (err instanceof HttpException) {
+        throw err;
+      }
+
+      throw new InternalServerErrorException(
+        responseTransactionsErrorsMessage.LOAD_TRANSACTION_ERROR,
       );
     }
   }
