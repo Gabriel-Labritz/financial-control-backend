@@ -80,7 +80,7 @@ describe('DashboardService', () => {
       });
     });
 
-    it('should throw a HttpException when http error ocurrs', async () => {
+    it('should throw HttpException when a http error ocurrs', async () => {
       // arranges
       const tokenPayload = {
         id: randomUUID(),
@@ -99,7 +99,7 @@ describe('DashboardService', () => {
       ).rejects.toThrow(HttpException);
     });
 
-    it('should throw an InternalServerErrorException when an unknown error ocurrs', async () => {
+    it('should throw InternalServerErrorException when an unknown error ocurrs', async () => {
       // arranges
       const tokenPayload = {
         id: randomUUID(),
@@ -115,6 +115,90 @@ describe('DashboardService', () => {
       // action and asserts
       await expect(
         dashboardService.balance(tokenPayload as any),
+      ).rejects.toThrow(InternalServerErrorException);
+    });
+  });
+
+  describe('monthlyBalance', () => {
+    it('should calculate total income and total expense of monthly transactions', async () => {
+      // arranges
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Jonh',
+      };
+      const allTransactions = [
+        {
+          id: randomUUID(),
+          title: 'testing 1',
+          amount: 200,
+          type: TransactionTypes.EXPENSE,
+          createdAt: new Date(),
+        },
+        {
+          id: randomUUID(),
+          title: 'testing 2',
+          amount: 400,
+          type: TransactionTypes.INCOME,
+          createdAt: new Date(),
+        },
+        {
+          id: randomUUID(),
+          title: 'testing 3',
+          amount: 100,
+          type: TransactionTypes.EXPENSE,
+          createdAt: new Date(),
+        },
+      ];
+
+      // mocks
+      const spyFindAllTransactions = jest
+        .spyOn(transactionService, 'findAllTransactionByUserId')
+        .mockResolvedValue(allTransactions as any);
+
+      // action
+      const result = await dashboardService.monthlyBalance(tokenPayload as any);
+
+      expect(spyFindAllTransactions).toHaveBeenCalledWith(tokenPayload);
+      expect(result).toEqual([
+        { month: '2025-09', totalExpenses: 300, totalIncomes: 400 },
+      ]);
+    });
+
+    it('should throw HttpException when a http error ocurrs', async () => {
+      // arranges
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Jonh',
+      };
+      const httpError = new NotFoundException();
+
+      // mocks
+      jest
+        .spyOn(transactionService, 'findAllTransactionByUserId')
+        .mockRejectedValue(httpError);
+
+      // action and asserts
+      await expect(
+        dashboardService.monthlyBalance(tokenPayload as any),
+      ).rejects.toThrow(HttpException);
+    });
+
+    it('should throw InternalServerErrorException when an unknown error ocurrs', async () => {
+      // arranges
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Jonh',
+      };
+      const unknownError = new Error();
+
+      // mocks
+      jest
+        .spyOn(transactionService, 'findAllTransactionByUserId')
+        .mockRejectedValue(unknownError);
+
+      // action and asserts
+      await expect(
+        dashboardService.monthlyBalance(tokenPayload as any),
       ).rejects.toThrow(InternalServerErrorException);
     });
   });

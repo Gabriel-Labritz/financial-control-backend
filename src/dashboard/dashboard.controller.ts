@@ -13,4 +13,9 @@ export class DashboardController {
   getUserBalance(@TokenPayloadParam() tokenPayload: TokenPayloadDto) {
     return this.dashboardService.balance(tokenPayload);
   }
+
+  @Get('monthly-balance')
+  getMonthlyBalance(@TokenPayloadParam() tokenPayload: TokenPayloadDto) {
+    return this.dashboardService.monthlyBalance(tokenPayload);
+  }
 }

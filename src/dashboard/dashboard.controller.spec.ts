@@ -31,6 +31,7 @@ describe('DashboardController', () => {
           provide: DashboardService,
           useValue: {
             balance: jest.fn(),
+            monthlyBalance: jest.fn(),
           },
         },
       ],
@@ -88,6 +89,51 @@ describe('DashboardController', () => {
       ).rejects.toThrow(NotFoundException);
       await expect(
         controller.getUserBalance(tokenPayload as any),
+      ).rejects.toThrow(errorMessage);
+    });
+  });
+
+  describe('monthly-balance', () => {
+    it('should call dashboardService.monthlyBalance with tokenPayload and return success message', async () => {
+      // arranges
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Jonh',
+      };
+      const successMessage = { message: 'your monthlyBalance was loded' };
+
+      // mocks
+      const spyMonthlyBalance = jest
+        .spyOn(dashboardService, 'monthlyBalance')
+        .mockResolvedValue(successMessage as any);
+
+      // action
+      const result = await controller.getMonthlyBalance(tokenPayload as any);
+
+      // asserts
+      expect(spyMonthlyBalance).toHaveBeenCalledWith(tokenPayload);
+      expect(result).toEqual(successMessage);
+    });
+
+    it('should throw HttpException when the dashboardService.balance throw an error', async () => {
+      // arranges
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Jonh',
+      };
+      const errorMessage = 'user not found';
+
+      // mocks
+      jest
+        .spyOn(dashboardService, 'monthlyBalance')
+        .mockRejectedValue(new NotFoundException(errorMessage));
+
+      // action and asserts
+      await expect(
+        controller.getMonthlyBalance(tokenPayload as any),
+      ).rejects.toThrow(NotFoundException);
+      await expect(
+        controller.getMonthlyBalance(tokenPayload as any),
       ).rejects.toThrow(errorMessage);
     });
   });
