@@ -23,4 +23,9 @@ export class DashboardController {
   getLastTransaction(@TokenPayloadParam() tokenPayload: TokenPayloadDto) {
     return this.dashboardService.lastTransactions(tokenPayload);
   }
+
+  @Get('expense-by-category')
+  getExpensesByCategory(@TokenPayloadParam() tokenPayload: TokenPayloadDto) {
+    return this.dashboardService.expensesByCategory(tokenPayload);
+  }
 }

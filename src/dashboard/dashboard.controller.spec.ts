@@ -33,6 +33,7 @@ describe('DashboardController', () => {
             balance: jest.fn(),
             monthlyBalance: jest.fn(),
             lastTransactions: jest.fn(),
+            expensesByCategory: jest.fn(),
           },
         },
       ],
@@ -180,6 +181,53 @@ describe('DashboardController', () => {
       ).rejects.toThrow(NotFoundException);
       await expect(
         controller.getLastTransaction(tokenPayload as any),
+      ).rejects.toThrow(errorMessage);
+    });
+  });
+
+  describe('expense-by-category', () => {
+    it('should call dashboardService.expensesByCategory with tokenPayload and return success message', async () => {
+      // arranges
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Jonh',
+      };
+      const successMessage = { message: 'your expenses by category was loded' };
+
+      // mocks
+      const spyExpensesByCategory = jest
+        .spyOn(dashboardService, 'expensesByCategory')
+        .mockResolvedValue(successMessage as any);
+
+      // action
+      const result = await controller.getExpensesByCategory(
+        tokenPayload as any,
+      );
+
+      // asserts
+      expect(spyExpensesByCategory).toHaveBeenCalledWith(tokenPayload);
+      expect(result).toEqual(successMessage);
+    });
+
+    it('should throw HttpException when the dashboardService.expensesByCategory throw an error', async () => {
+      // arranges
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Jonh',
+      };
+      const errorMessage = 'user not found';
+
+      // mocks
+      jest
+        .spyOn(dashboardService, 'expensesByCategory')
+        .mockRejectedValue(new NotFoundException(errorMessage));
+
+      // action and asserts
+      await expect(
+        controller.getExpensesByCategory(tokenPayload as any),
+      ).rejects.toThrow(NotFoundException);
+      await expect(
+        controller.getExpensesByCategory(tokenPayload as any),
       ).rejects.toThrow(errorMessage);
     });
   });

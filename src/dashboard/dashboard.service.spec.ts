@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { PaginationDto } from '../transaction/dto/pagination.dto';
 import { responseTransactionsErrorsMessage } from '../common/enums/erros/errors_transactions/response_transactions_errors_message.enum';
+import { TransactionCategories } from '../common/enums/transaction/transaction_categories.enum';
 
 describe('DashboardService', () => {
   let dashboardService: DashboardService;
@@ -288,6 +289,94 @@ describe('DashboardService', () => {
       // action and asserts
       await expect(
         dashboardService.lastTransactions(tokenPayload as any),
+      ).rejects.toThrow(InternalServerErrorException);
+    });
+  });
+
+  describe('expensesByCategory', () => {
+    it('should calculate total expenses by category', async () => {
+      // arranges
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Jonh',
+      };
+      const allTransactions = [
+        {
+          id: randomUUID(),
+          title: 'testing 1',
+          amount: 200,
+          type: TransactionTypes.EXPENSE,
+          category: TransactionCategories.HEALTH,
+        },
+        {
+          id: randomUUID(),
+          title: 'testing 2',
+          amount: 400,
+          type: TransactionTypes.INCOME,
+          category: TransactionCategories.OTHER,
+        },
+        {
+          id: randomUUID(),
+          title: 'testing 3',
+          amount: 20,
+          type: TransactionTypes.EXPENSE,
+          category: TransactionCategories.TRANSPORT,
+        },
+      ];
+
+      // mocks
+      const spyFindAllTransactions = jest
+        .spyOn(transactionService, 'findAllTransactionByUserId')
+        .mockResolvedValue(allTransactions as any);
+
+      // action
+      const result = await dashboardService.expensesByCategory(
+        tokenPayload as any,
+      );
+
+      // asserts
+      expect(spyFindAllTransactions).toHaveBeenCalledWith(tokenPayload);
+      expect(result).toEqual([
+        { category: 'health', totalExpenses: 200 },
+        { category: 'transport', totalExpenses: 20 },
+      ]);
+    });
+
+    it('should throw HttpException when a http error ocurrs', async () => {
+      // arranges
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Jonh',
+      };
+      const httpError = new NotFoundException();
+
+      // mocks
+      jest
+        .spyOn(transactionService, 'findAllTransactionByUserId')
+        .mockRejectedValue(httpError);
+
+      // action and asserts
+      await expect(
+        dashboardService.expensesByCategory(tokenPayload as any),
+      ).rejects.toThrow(HttpException);
+    });
+
+    it('should throw InternalServerErrorException when an unknown error ocurrs', async () => {
+      // arranges
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Jonh',
+      };
+      const unknownError = new Error();
+
+      // mocks
+      jest
+        .spyOn(transactionService, 'findAllTransactionByUserId')
+        .mockRejectedValue(unknownError);
+
+      // action and asserts
+      await expect(
+        dashboardService.expensesByCategory(tokenPayload as any),
       ).rejects.toThrow(InternalServerErrorException);
     });
   });

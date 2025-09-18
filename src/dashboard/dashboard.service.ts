@@ -7,7 +7,10 @@ import { TransactionService } from '../transaction/transaction.service';
 import { TokenPayloadDto } from '../auth/dto/token_payload.dto';
 import { TransactionTypes } from '../common/enums/transaction/transaction_types.enum';
 import { responseErrorsDashboardMessage } from '../common/enums/erros/errors_dashboard/response_errors_dashboard_messages.enum';
-import { MonthlySummary } from './interfaces/dashboard.intefaces';
+import {
+  ExpensesByCategory,
+  MonthlySummary,
+} from './interfaces/dashboard.intefaces';
 
 @Injectable()
 export class DashboardService {
@@ -122,6 +125,57 @@ export class DashboardService {
 
       throw new InternalServerErrorException(
         responseErrorsDashboardMessage.ERROR_LOAD_LAST_TRANSACTIONS,
+      );
+    }
+  }
+
+  async expensesByCategory(tokenPayload: TokenPayloadDto) {
+    try {
+      // get all user transactions
+      const allTransactions =
+        await this.transactionService.findAllTransactionByUserId(tokenPayload);
+
+      // filter by expense type
+      const expenses = allTransactions.filter(
+        (transaction) => transaction.type === TransactionTypes.EXPENSE,
+      );
+
+      const expensesByCategory = expenses.reduce((acc, transaction) => {
+        const category = transaction.category; // health, other...
+        const amount = Number(transaction.amount);
+
+        // create a category object if not exists on acc
+        if (!acc[category]) {
+          acc[category] = {
+            expenses: 0,
+          };
+        }
+
+        // calculate all expenses by category
+        acc[category].expenses += amount;
+
+        return acc;
+      }, {} as ExpensesByCategory);
+
+      const formattedExpensesByCategory = Object.keys(expensesByCategory).map(
+        (category) => {
+          return {
+            category,
+            totalExpenses: Number(
+              expensesByCategory[category].expenses.toFixed(2),
+            ),
+          };
+        },
+      );
+
+      return formattedExpensesByCategory;
+    } catch (err) {
+      if (err instanceof HttpException) {
+        throw err;
+      }
+
+      throw new InternalServerErrorException(
+        responseErrorsDashboardMessage.ERROR_LOAD_EXPENSES_BY_TRANSACTIONS,
       );
     }
   }

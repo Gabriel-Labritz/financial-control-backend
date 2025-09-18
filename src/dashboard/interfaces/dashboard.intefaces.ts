@@ -4,3 +4,9 @@ export interface MonthlySummary {
     totalExpenses: number;
   };
 }
+
+export interface ExpensesByCategory {
+  [key: string]: {
+    expenses: number;
+  };
+}
