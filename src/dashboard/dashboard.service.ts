@@ -103,4 +103,26 @@ export class DashboardService {
       );
     }
   }
+
+  async lastTransactions(tokenPayload: TokenPayloadDto) {
+    try {
+      const paginationDto = { limit: 6, page: 1 };
+
+      const { message, userTransactions } =
+        await this.transactionService.findAll(paginationDto, tokenPayload);
+
+      return {
+        message,
+        userTransactions,
+      };
+    } catch (err) {
+      if (err instanceof HttpException) {
+        throw err;
+      }
+
+      throw new InternalServerErrorException(
+        responseErrorsDashboardMessage.ERROR_LOAD_LAST_TRANSACTIONS,
+      );
+    }
+  }
 }

@@ -18,4 +18,9 @@ export class DashboardController {
   getMonthlyBalance(@TokenPayloadParam() tokenPayload: TokenPayloadDto) {
     return this.dashboardService.monthlyBalance(tokenPayload);
   }
+
+  @Get('last-transactions')
+  getLastTransaction(@TokenPayloadParam() tokenPayload: TokenPayloadDto) {
+    return this.dashboardService.lastTransactions(tokenPayload);
+  }
 }

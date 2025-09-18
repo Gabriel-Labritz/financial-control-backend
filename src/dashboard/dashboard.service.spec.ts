@@ -8,6 +8,8 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
+import { PaginationDto } from '../transaction/dto/pagination.dto';
+import { responseTransactionsErrorsMessage } from '../common/enums/erros/errors_transactions/response_transactions_errors_message.enum';
 
 describe('DashboardService', () => {
   let dashboardService: DashboardService;
@@ -21,6 +23,7 @@ describe('DashboardService', () => {
         {
           provide: TransactionService,
           useValue: {
+            findAll: jest.fn(),
             findAllTransactionByUserId: jest.fn(),
           },
         },
@@ -199,6 +202,92 @@ describe('DashboardService', () => {
       // action and asserts
       await expect(
         dashboardService.monthlyBalance(tokenPayload as any),
+      ).rejects.toThrow(InternalServerErrorException);
+    });
+  });
+
+  describe('lastTransactions', () => {
+    it('should return the last user transactions', async () => {
+      // arranges
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Jonh',
+      };
+      const paginationDto: PaginationDto = {
+        limit: 6,
+        page: 1,
+      };
+      const lastTransactions = [
+        {
+          id: randomUUID(),
+          title: 'testing 1',
+          createdAt: new Date(),
+        },
+        {
+          id: randomUUID(),
+          title: 'testing 2',
+          createdAt: new Date(),
+        },
+        {
+          id: randomUUID(),
+          title: 'testing 3',
+          createdAt: new Date(),
+        },
+      ];
+      const expectedResult = {
+        message: responseTransactionsErrorsMessage.LOAD_TRANSACTION_ERROR,
+        userTransactions: lastTransactions,
+      };
+
+      // mocks
+      const spyFindAllTransactions = jest
+        .spyOn(transactionService, 'findAll')
+        .mockResolvedValue(expectedResult as any);
+
+      // action
+      const result = await dashboardService.lastTransactions(
+        tokenPayload as any,
+      );
+
+      // asserts
+      expect(spyFindAllTransactions).toHaveBeenCalledWith(
+        paginationDto,
+        tokenPayload,
+      );
+      expect(result).toEqual(expectedResult);
+    });
+
+    it('should throw HttpException when a http error ocurrs', async () => {
+      // arranges
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Jonh',
+      };
+      const httpError = new NotFoundException();
+
+      // mocks
+      jest.spyOn(transactionService, 'findAll').mockRejectedValue(httpError);
+
+      // action and asserts
+      await expect(
+        dashboardService.lastTransactions(tokenPayload as any),
+      ).rejects.toThrow(HttpException);
+    });
+
+    it('should throw InternalServerErrorException when an unknown error ocurrs', async () => {
+      // arranges
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Jonh',
+      };
+      const unknownError = new Error();
+
+      // mocks
+      jest.spyOn(transactionService, 'findAll').mockRejectedValue(unknownError);
+
+      // action and asserts
+      await expect(
+        dashboardService.lastTransactions(tokenPayload as any),
       ).rejects.toThrow(InternalServerErrorException);
     });
   });
