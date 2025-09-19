@@ -3,6 +3,7 @@ import {
   HttpException,
   Injectable,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entity/User';
@@ -11,6 +12,7 @@ import { HashingProtocol } from '../auth/hashing/hashing-protocol';
 import { CreateUserDto } from './dto/create_user.dto';
 import { responseErrorsUserMessages } from '../common/enums/erros/errors_users/response_errors_messages';
 import { responseUserSuccessMessages } from '../common/enums/success/success_user/response_user_success';
+import { TokenPayloadDto } from '../auth/dto/token_payload.dto';
 
 @Injectable()
 export class UserService {
@@ -51,6 +53,32 @@ export class UserService {
 
       throw new InternalServerErrorException(
         responseErrorsUserMessages.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  async getUser(tokenPayload: TokenPayloadDto) {
+    try {
+      const user = await this.userRepository.findOne({
+        where: { id: tokenPayload.id },
+        select: ['id', 'name', 'email', 'createdAt'],
+      });
+
+      if (!user) {
+        throw new NotFoundException(responseErrorsUserMessages.USER_NOT_FOUND);
+      }
+
+      return {
+        message: responseUserSuccessMessages.USER_LOADED,
+        user,
+      };
+    } catch (err) {
+      if (err instanceof HttpException) {
+        throw err;
+      }
+
+      throw new InternalServerErrorException(
+        responseErrorsUserMessages.ERROR_LOAD_USER_DATA,
       );
     }
   }

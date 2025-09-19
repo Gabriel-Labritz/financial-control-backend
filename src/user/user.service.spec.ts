@@ -11,7 +11,9 @@ import {
   ConflictException,
   HttpException,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common';
+import { randomUUID } from 'crypto';
 
 describe('UserService', () => {
   let userService: UserService;
@@ -27,6 +29,7 @@ describe('UserService', () => {
           useValue: {
             create: jest.fn(),
             save: jest.fn(),
+            findOne: jest.fn(),
           },
         },
         {
@@ -104,7 +107,7 @@ describe('UserService', () => {
       );
     });
 
-    it('should throw an HttpException when http errors occurs', async () => {
+    it('should throw HttpException when a http errors occurs', async () => {
       // arranges
       const createUserDto: CreateUserDto = {
         name: 'Jonh',
@@ -122,7 +125,7 @@ describe('UserService', () => {
       );
     });
 
-    it('should throw an InternalServerException when an unknown errors occurs', async () => {
+    it('should throw InternalServerException when an unknown error occurs', async () => {
       // arranges
       const createUserDto: CreateUserDto = {
         name: 'Jonh',
@@ -136,6 +139,90 @@ describe('UserService', () => {
 
       // action and assert
       await expect(userService.create(createUserDto)).rejects.toThrow(
+        InternalServerErrorException,
+      );
+    });
+  });
+
+  describe('getUser', () => {
+    it('should return datas from user logged in', async () => {
+      // arranges
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Jonh',
+      };
+      const user = {
+        id: tokenPayload.id,
+        name: tokenPayload.name,
+        email: 'jonh@gmail.com',
+        createdAt: new Date(),
+      };
+
+      // mocks
+      const spyFindOne = jest
+        .spyOn(userRepository, 'findOne')
+        .mockResolvedValue(user as any);
+
+      // action
+      const result = await userService.getUser(tokenPayload as any);
+
+      // asserts
+      expect(spyFindOne).toHaveBeenCalledWith({
+        where: { id: tokenPayload.id },
+        select: ['id', 'name', 'email', 'createdAt'],
+      });
+      expect(result).toEqual({
+        message: responseUserSuccessMessages.USER_LOADED,
+        user,
+      });
+    });
+
+    it('should throw NotFoundException when user not found', async () => {
+      // arranges
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Jonh',
+      };
+
+      // mocks
+      jest.spyOn(userRepository, 'findOne').mockResolvedValue(null);
+
+      // action and asserts
+      await expect(userService.getUser(tokenPayload as any)).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('should throw HttpException when a http error occurs', async () => {
+      // arranges
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Jonh',
+      };
+      const httpError = new NotFoundException();
+
+      // mocks
+      jest.spyOn(userRepository, 'findOne').mockRejectedValue(httpError);
+
+      // action and asserts
+      await expect(userService.getUser(tokenPayload as any)).rejects.toThrow(
+        HttpException,
+      );
+    });
+
+    it('should throw InternalServerErrorException when an unknown error occurs', async () => {
+      // arranges
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Jonh',
+      };
+      const unknownError = new Error();
+
+      // mocks
+      jest.spyOn(userRepository, 'findOne').mockRejectedValue(unknownError);
+
+      // action and asserts
+      await expect(userService.getUser(tokenPayload as any)).rejects.toThrow(
         InternalServerErrorException,
       );
     });
