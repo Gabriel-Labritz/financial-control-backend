@@ -3,4 +3,5 @@ export enum responseUserSuccessMessages {
   USER_LOGGED = 'Login bem-sucedido!',
   USER_LOGOUT = 'Logout realizado com sucesso, até breve.',
   USER_LOADED = 'Usuário foi carregado com sucesso',
+  USER_DELETED = 'Sua conta foi excluída com sucesso.',
 }

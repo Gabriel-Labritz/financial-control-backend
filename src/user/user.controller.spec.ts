@@ -7,7 +7,7 @@ import {
   ExecutionContext,
   NotFoundException,
 } from '@nestjs/common';
-import { Request } from 'express';
+import { Request, Response } from 'express';
 import { randomUUID } from 'crypto';
 import { AuthGuard } from '../common/guards/auth.guard';
 
@@ -37,6 +37,7 @@ describe('UserController', () => {
           useValue: {
             create: jest.fn(),
             getUser: jest.fn(),
+            remove: jest.fn(),
           },
         },
       ],
@@ -76,7 +77,7 @@ describe('UserController', () => {
       expect(result).toEqual(expectedResponse);
     });
 
-    it('should throw HttpException when userService.create throws a http error', async () => {
+    it('should throw HttpException when userService.create throws an http error', async () => {
       // arranges
       const createUserDto: CreateUserDto = {
         name: 'John',
@@ -100,7 +101,7 @@ describe('UserController', () => {
     });
   });
 
-  describe('profile', () => {
+  describe('getProfileUser', () => {
     it('should call userService.getUser with token payload and return success message', async () => {
       // arranges
       const expectedResponse = { message: 'user loaded successfully' };
@@ -118,7 +119,7 @@ describe('UserController', () => {
       expect(result).toEqual(expectedResponse);
     });
 
-    it('should throw HttpException when userService.getUser throws a http error', async () => {
+    it('should throw HttpException when userService.getUser throws an http error', async () => {
       // arranges
       const errorMessage = 'user not found';
 
@@ -133,6 +134,57 @@ describe('UserController', () => {
       ).rejects.toThrow(NotFoundException);
       await expect(
         controller.getProfileUser(mockTokenPayload as any),
+      ).rejects.toThrow(errorMessage);
+    });
+  });
+
+  describe('deleteUserAccount', () => {
+    it('should call userService.remove with token payload, clear cookie and return success message', async () => {
+      // arranges
+      const expectedMessage = 'user deleted successfully';
+      const expectedResult = { message: expectedMessage };
+      const { message } = expectedResult;
+
+      // mocks
+      const spyRemoveUserService = jest
+        .spyOn(userService, 'remove')
+        .mockResolvedValue(expectedResult as any);
+
+      const mockResponse = {
+        clearCookie: jest.fn(),
+      } as unknown as { clearCookie: jest.Mock };
+
+      // action
+      const result = await controller.deleteUserAccount(
+        mockResponse as any,
+        mockTokenPayload as any,
+      );
+
+      // asserts
+      expect(spyRemoveUserService).toHaveBeenCalledWith(mockTokenPayload);
+      expect(mockResponse.clearCookie).toHaveBeenCalledWith('jwt');
+      expect(result).toEqual(message);
+    });
+
+    it('should throw HttpException when userService.remove throw an http error', async () => {
+      // arranges
+      const errorMessage = 'user not found';
+
+      // mocks
+      jest
+        .spyOn(userService, 'remove')
+        .mockRejectedValue(new NotFoundException(errorMessage));
+
+      const mockResponse = {
+        clearCookie: jest.fn(),
+      } as unknown as Response;
+
+      // action and asserts
+      await expect(
+        controller.deleteUserAccount(mockResponse, mockTokenPayload as any),
+      ).rejects.toThrow(NotFoundException);
+      await expect(
+        controller.deleteUserAccount(mockResponse, mockTokenPayload as any),
       ).rejects.toThrow(errorMessage);
     });
   });

@@ -30,6 +30,7 @@ describe('UserService', () => {
             create: jest.fn(),
             save: jest.fn(),
             findOne: jest.fn(),
+            delete: jest.fn(),
           },
         },
         {
@@ -223,6 +224,78 @@ describe('UserService', () => {
 
       // action and asserts
       await expect(userService.getUser(tokenPayload as any)).rejects.toThrow(
+        InternalServerErrorException,
+      );
+    });
+  });
+
+  describe('remove', () => {
+    it('should delete user logged in account', async () => {
+      // arranges
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Jonh',
+      };
+      const user = {
+        id: tokenPayload.id,
+        name: tokenPayload.name,
+        email: 'jonh@gmail.com',
+        createdAt: new Date(),
+      };
+      const expectedReturnGetUser = {
+        message: responseUserSuccessMessages.USER_LOADED,
+        user,
+      };
+
+      // mocks
+      const spyGetUser = jest
+        .spyOn(userService, 'getUser')
+        .mockResolvedValue(expectedReturnGetUser as any);
+      const spyDelete = jest
+        .spyOn(userRepository, 'delete')
+        .mockResolvedValue({ affected: 1 } as any);
+
+      // action
+      const result = await userService.remove(tokenPayload as any);
+
+      // asserts
+      expect(spyGetUser).toHaveBeenCalledWith(tokenPayload);
+      expect(spyDelete).toHaveBeenCalledWith(user.id);
+      expect(result).toEqual({
+        message: responseUserSuccessMessages.USER_DELETED,
+      });
+    });
+
+    it('should throw HttpException when a http error occurs', async () => {
+      // arranges
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Jonh',
+      };
+      const httpError = new NotFoundException();
+
+      // mocks
+      jest.spyOn(userService, 'getUser').mockRejectedValue(httpError);
+
+      // action and asserts
+      await expect(userService.remove(tokenPayload as any)).rejects.toThrow(
+        HttpException,
+      );
+    });
+
+    it('should throw InternalServerErrorException when an unknown error occurs', async () => {
+      // arranges
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Jonh',
+      };
+      const unknownError = new Error();
+
+      // mocks
+      jest.spyOn(userService, 'getUser').mockRejectedValue(unknownError);
+
+      // action and asserts
+      await expect(userService.remove(tokenPayload as any)).rejects.toThrow(
         InternalServerErrorException,
       );
     });

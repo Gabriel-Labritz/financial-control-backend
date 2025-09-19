@@ -82,4 +82,27 @@ export class UserService {
       );
     }
   }
+
+  async update() {
+    return 'this route will update user logged in account';
+  }
+
+  async remove(tokenPayload: TokenPayloadDto) {
+    try {
+      const { user } = await this.getUser(tokenPayload);
+      await this.userRepository.delete(user.id);
+
+      return {
+        message: responseUserSuccessMessages.USER_DELETED,
+      };
+    } catch (err) {
+      if (err instanceof HttpException) {
+        throw err;
+      }
+
+      throw new InternalServerErrorException(
+        responseErrorsUserMessages.ERROR_DELETE_USER,
+      );
+    }
+  }
 }
