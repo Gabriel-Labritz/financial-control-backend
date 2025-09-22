@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   HttpException,
   Injectable,
@@ -13,6 +14,7 @@ import { CreateUserDto } from './dto/create_user.dto';
 import { responseErrorsUserMessages } from '../common/enums/erros/errors_users/response_errors_messages';
 import { responseUserSuccessMessages } from '../common/enums/success/success_user/response_user_success';
 import { TokenPayloadDto } from '../auth/dto/token_payload.dto';
+import { UpdateUserDto } from './dto/update_user.dto';
 
 @Injectable()
 export class UserService {
@@ -83,8 +85,52 @@ export class UserService {
     }
   }
 
-  async update() {
-    return 'this route will update user logged in account';
+  async update(updateUserDto: UpdateUserDto, tokenPayload: TokenPayloadDto) {
+    try {
+      const updatedData = { ...updateUserDto };
+
+      if (Object.keys(updateUserDto).length === 0) {
+        throw new BadRequestException(
+          responseErrorsUserMessages.ERROR_EMPTY_DATA_UPDATE,
+        );
+      }
+
+      const user = await this.userRepository.findOne({
+        where: { id: tokenPayload.id },
+      });
+
+      if (!user) {
+        throw new NotFoundException(responseErrorsUserMessages.USER_NOT_FOUND);
+      }
+
+      if (updatedData.password) {
+        updatedData.password = await this.hashingService.hashPassword(
+          updatedData.password,
+        );
+      }
+
+      const userUpdated = Object.assign(user, updatedData);
+      await this.userRepository.save(userUpdated);
+
+      return {
+        message: responseUserSuccessMessages.USER_UPDATED,
+        user: {
+          id: userUpdated.id,
+          name: userUpdated.name,
+          email: userUpdated.email,
+          createdAt: userUpdated.createdAt,
+          updatedAt: userUpdated.updatedAt,
+        },
+      };
+    } catch (err) {
+      if (err instanceof HttpException) {
+        throw err;
+      }
+
+      throw new InternalServerErrorException(
+        responseErrorsUserMessages.ERROR_UPDATE_USER,
+      );
+    }
   }
 
   async remove(tokenPayload: TokenPayloadDto) {

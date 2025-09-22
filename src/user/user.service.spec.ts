@@ -14,6 +14,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { randomUUID } from 'crypto';
+import { UpdateUserDto } from './dto/update_user.dto';
 
 describe('UserService', () => {
   let userService: UserService;
@@ -226,6 +227,194 @@ describe('UserService', () => {
       await expect(userService.getUser(tokenPayload as any)).rejects.toThrow(
         InternalServerErrorException,
       );
+    });
+  });
+
+  describe('update', () => {
+    it('should update user logged in account', async () => {
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Old name',
+      };
+      const updateUserDto: UpdateUserDto = {
+        name: 'New Name',
+      };
+      const user = {
+        id: tokenPayload.id,
+        name: tokenPayload.name,
+        email: 'testing@test.com',
+        password: 'password',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      const expectedUserUpdated = {
+        ...user,
+        ...updateUserDto,
+      };
+
+      // mocks
+      const spyFindOneRepository = jest
+        .spyOn(userRepository, 'findOne')
+        .mockResolvedValue({ ...user } as any);
+      const spySaveRepository = jest
+        .spyOn(userRepository, 'save')
+        .mockResolvedValue(expectedUserUpdated as any);
+
+      // action
+      const result = await userService.update(
+        updateUserDto,
+        tokenPayload as any,
+      );
+
+      // asserts
+      expect(spyFindOneRepository).toHaveBeenCalledWith({
+        where: { id: tokenPayload.id },
+      });
+      expect(spySaveRepository).toHaveBeenCalledWith(expectedUserUpdated);
+      expect(result).toEqual({
+        message: responseUserSuccessMessages.USER_UPDATED,
+        user: {
+          id: expectedUserUpdated.id,
+          name: expectedUserUpdated.name,
+          email: expectedUserUpdated.email,
+          createdAt: expectedUserUpdated.createdAt,
+          updatedAt: expectedUserUpdated.updatedAt,
+        },
+      });
+    });
+
+    it('should update user logged in account with password', async () => {
+      // asserts
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Old name',
+      };
+      const updateUserDto: UpdateUserDto = {
+        password: 'New Password',
+      };
+      const user = {
+        id: tokenPayload.id,
+        name: tokenPayload.name,
+        email: 'testing@test.com',
+        password: 'Old password',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      const hash = 'HASHINGUSERPASSSWORD';
+      const expectedUserUpdated = {
+        ...user,
+        ...updateUserDto,
+        password: hash,
+      };
+
+      // mocks
+      const spyFindOneRepository = jest
+        .spyOn(userRepository, 'findOne')
+        .mockResolvedValue({ ...user } as any);
+      const spyHash = jest
+        .spyOn(hashingService, 'hashPassword')
+        .mockResolvedValue(hash);
+      const spySaveRepository = jest
+        .spyOn(userRepository, 'save')
+        .mockResolvedValue(expectedUserUpdated as any);
+
+      // actions
+      const result = await userService.update(
+        updateUserDto,
+        tokenPayload as any,
+      );
+
+      // asserts
+      expect(spyFindOneRepository).toHaveBeenCalledWith({
+        where: { id: tokenPayload.id },
+      });
+      expect(spyHash).toHaveBeenCalledWith(updateUserDto.password);
+      expect(spySaveRepository).toHaveBeenCalledWith(expectedUserUpdated);
+      expect(result).toEqual({
+        message: responseUserSuccessMessages.USER_UPDATED,
+        user: {
+          id: expectedUserUpdated.id,
+          name: expectedUserUpdated.name,
+          email: expectedUserUpdated.email,
+          createdAt: expectedUserUpdated.createdAt,
+          updatedAt: expectedUserUpdated.updatedAt,
+        },
+      });
+    });
+
+    it('should throw BadRequestException when updateUserDto is empty ', async () => {
+      // asserts
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Old name',
+      };
+      const updateUserDto: UpdateUserDto = {};
+
+      // actions and asserts
+      await expect(
+        userService.update(updateUserDto, tokenPayload as any),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw NotFoundException when user not found ', async () => {
+      // asserts
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Old name',
+      };
+      const updateUserDto: UpdateUserDto = {
+        name: 'new name',
+      };
+
+      // mocks
+      jest.spyOn(userRepository, 'findOne').mockResolvedValue(null);
+
+      // actions and asserts
+      await expect(
+        userService.update(updateUserDto, tokenPayload as any),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw HttpException when an http error occurs', async () => {
+      // asserts
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Old name',
+      };
+      const updateUserDto: UpdateUserDto = {
+        name: 'new name',
+      };
+
+      const httpError = new NotFoundException();
+
+      // mocks
+      jest.spyOn(userRepository, 'findOne').mockRejectedValue(httpError);
+
+      // actions and asserts
+      await expect(
+        userService.update(updateUserDto, tokenPayload as any),
+      ).rejects.toThrow(HttpException);
+    });
+
+    it('should throw InternalServerErrorException when an unknown error occurs', async () => {
+      // asserts
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Old name',
+      };
+      const updateUserDto: UpdateUserDto = {
+        name: 'new name',
+      };
+
+      const unknownError = new Error();
+
+      // mocks
+      jest.spyOn(userRepository, 'findOne').mockRejectedValue(unknownError);
+
+      // actions and asserts
+      await expect(
+        userService.update(updateUserDto, tokenPayload as any),
+      ).rejects.toThrow(InternalServerErrorException);
     });
   });
 

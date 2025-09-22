@@ -14,6 +14,7 @@ import { TokenPayloadParam } from '../common/params/token_payload.param';
 import { TokenPayloadDto } from '../auth/dto/token_payload.dto';
 import { AuthGuard } from '../common/guards/auth.guard';
 import type { Response } from 'express';
+import { UpdateUserDto } from './dto/update_user.dto';
 
 @Controller('user')
 export class UserController {
@@ -32,8 +33,11 @@ export class UserController {
 
   @UseGuards(AuthGuard)
   @Patch('update')
-  updateUserAccount() {
-    return this.userService.update();
+  updateUserAccount(
+    @Body() updateUserDto: UpdateUserDto,
+    @TokenPayloadParam() tokenPayload: TokenPayloadDto,
+  ) {
+    return this.userService.update(updateUserDto, tokenPayload);
   }
 
   @UseGuards(AuthGuard)

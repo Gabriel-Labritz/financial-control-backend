@@ -3,6 +3,7 @@ import { UserController } from './user.controller';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create_user.dto';
 import {
+  BadRequestException,
   ConflictException,
   ExecutionContext,
   NotFoundException,
@@ -10,6 +11,7 @@ import {
 import { Request, Response } from 'express';
 import { randomUUID } from 'crypto';
 import { AuthGuard } from '../common/guards/auth.guard';
+import { UpdateUserDto } from './dto/update_user.dto';
 
 const mockTokenPayload = {
   id: randomUUID(),
@@ -37,6 +39,7 @@ describe('UserController', () => {
           useValue: {
             create: jest.fn(),
             getUser: jest.fn(),
+            update: jest.fn(),
             remove: jest.fn(),
           },
         },
@@ -134,6 +137,53 @@ describe('UserController', () => {
       ).rejects.toThrow(NotFoundException);
       await expect(
         controller.getProfileUser(mockTokenPayload as any),
+      ).rejects.toThrow(errorMessage);
+    });
+  });
+
+  describe('updateUserAccount', () => {
+    it('should call userService.update with updateUserDto, token payload and return success message', async () => {
+      // arranges
+      const updateUserDto: UpdateUserDto = {
+        name: 'new name',
+      };
+      const expectedResponse = { message: 'user updated successfully' };
+
+      // mocks
+      const spyUpdateService = jest
+        .spyOn(userService, 'update')
+        .mockResolvedValue(expectedResponse as any);
+
+      // action
+      const result = await controller.updateUserAccount(
+        updateUserDto,
+        mockTokenPayload as any,
+      );
+
+      // asserts
+      expect(spyUpdateService).toHaveBeenCalledWith(
+        updateUserDto,
+        mockTokenPayload,
+      );
+      expect(result).toEqual(expectedResponse);
+    });
+
+    it('should throw HttpException when userService.update throws an http error', async () => {
+      // arranges
+      const updateUserDto: UpdateUserDto = {};
+      const errorMessage = 'empty dto request';
+
+      // mocks
+      jest
+        .spyOn(userService, 'update')
+        .mockRejectedValue(new BadRequestException(errorMessage));
+
+      // action and assert
+      await expect(
+        controller.updateUserAccount(updateUserDto, mockTokenPayload as any),
+      ).rejects.toThrow(BadRequestException);
+      await expect(
+        controller.updateUserAccount(updateUserDto, mockTokenPayload as any),
       ).rejects.toThrow(errorMessage);
     });
   });
