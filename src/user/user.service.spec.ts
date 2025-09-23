@@ -15,6 +15,11 @@ import {
 } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { UpdateUserDto } from './dto/update_user.dto';
+import { promises as fsPromises } from 'fs';
+import { join } from 'path';
+import { responseErrorsUserMessages } from '../common/enums/erros/errors_users/response_errors_messages';
+
+jest.mock('fs/promises');
 
 describe('UserService', () => {
   let userService: UserService;
@@ -487,6 +492,236 @@ describe('UserService', () => {
       await expect(userService.remove(tokenPayload as any)).rejects.toThrow(
         InternalServerErrorException,
       );
+    });
+  });
+
+  describe('updateProfileImage', () => {
+    it('should save user image profile', async () => {
+      // arranges
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Jonh',
+      };
+      const file = {
+        filename: 'test',
+        path: 'uploads/image-1758564089477-186878643.jpg',
+      };
+      const user = {
+        id: tokenPayload.id,
+        name: tokenPayload.name,
+        profileImageUrl: '',
+      };
+
+      // mocks
+      const spyFindUser = jest
+        .spyOn(userRepository, 'findOne')
+        .mockResolvedValue(user as any);
+      const spySave = jest
+        .spyOn(userRepository, 'save')
+        .mockResolvedValue(user as any);
+
+      // action
+      const result = await userService.updateProfileImage(
+        file as any,
+        tokenPayload as any,
+      );
+
+      // asserts
+      expect(spyFindUser).toHaveBeenCalledWith({
+        where: { id: tokenPayload.id },
+      });
+      expect(spySave).toHaveBeenCalledWith(user);
+      expect(result).toEqual({
+        message: responseUserSuccessMessages.IMAGE_UPDATED,
+        user: {
+          id: user.id,
+          name: user.name,
+          profileImageUrl: user.profileImageUrl,
+        },
+      });
+    });
+
+    it('should remove old user profile image', async () => {
+      // arranges
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Jonh',
+      };
+      const file = {
+        filename: 'test',
+        path: 'uploads/image-1758564089477-186878643.jpg',
+      };
+      const user = {
+        id: tokenPayload.id,
+        name: tokenPayload.name,
+        profileImageUrl: 'uploads/image-1758564089423-186878671.jpg',
+      };
+      const expectedImagePath = join(process.cwd(), user.profileImageUrl);
+
+      // mocks
+      const spyFindUser = jest
+        .spyOn(userRepository, 'findOne')
+        .mockResolvedValue({ ...user } as any);
+
+      const unlinkSpy = jest
+        .spyOn(fsPromises, 'unlink')
+        .mockResolvedValue(undefined);
+
+      const spySave = jest
+        .spyOn(userRepository, 'save')
+        .mockResolvedValue({ ...user, profileImageUrl: file.path } as any);
+
+      // action
+      const result = await userService.updateProfileImage(
+        file as any,
+        tokenPayload as any,
+      );
+
+      // asserts
+      expect(spyFindUser).toHaveBeenCalledWith({
+        where: { id: tokenPayload.id },
+      });
+      expect(unlinkSpy).toHaveBeenCalledWith(expectedImagePath);
+      expect(spySave).toHaveBeenCalledWith(
+        expect.objectContaining({ profileImageUrl: file.path }),
+      );
+      expect(result).toEqual(
+        expect.objectContaining({
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          user: expect.objectContaining({ profileImageUrl: file.path }),
+        }),
+      );
+    });
+
+    it('should log an error if old image deletion fails but still save new image path', async () => {
+      // arranges
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Jonh',
+      };
+      const file = {
+        filename: 'test-new',
+        path: 'uploads/image-new-path.jpg',
+      };
+      const user = {
+        id: tokenPayload.id,
+        name: tokenPayload.name,
+        profileImageUrl: 'uploads/image-old-path.jpg',
+      };
+      const expectedUserUpdated = {
+        ...user,
+        profileImageUrl: file.path,
+      };
+
+      // mocks
+      const spyFindUser = jest
+        .spyOn(userRepository, 'findOne')
+        .mockResolvedValue({ ...user } as any);
+      const unlinkSpy = jest
+        .spyOn(fsPromises, 'unlink')
+        .mockRejectedValue(new Error('error occurs'));
+      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation();
+      const spySave = jest
+        .spyOn(userRepository, 'save')
+        .mockResolvedValue(expectedUserUpdated as any);
+
+      // action
+      const result = await userService.updateProfileImage(
+        file as any,
+        tokenPayload as any,
+      );
+
+      // asserts
+      expect(spyFindUser).toHaveBeenCalledWith({
+        where: { id: tokenPayload.id },
+      });
+      expect(unlinkSpy).toHaveBeenCalled();
+      expect(consoleErrorSpy).toHaveBeenCalled();
+      expect(spySave).toHaveBeenCalledWith(
+        expect.objectContaining({ profileImageUrl: file.path }),
+      );
+      expect(result).toEqual({
+        message: responseUserSuccessMessages.IMAGE_UPDATED,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+        user: expect.objectContaining({ profileImageUrl: file.path }),
+      });
+    });
+
+    it('should throw BadRequestException if no file is sent', async () => {
+      // arranges
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Jonh',
+      };
+
+      // actions and asserts
+      await expect(
+        userService.updateProfileImage(null as any, tokenPayload as any),
+      ).rejects.toThrow(BadRequestException);
+      await expect(
+        userService.updateProfileImage(null as any, tokenPayload as any),
+      ).rejects.toThrow(responseErrorsUserMessages.ERROR_IMAGE_EMPTY);
+    });
+
+    it('should throw NotFoundException when user not found', async () => {
+      // arranges
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Jonh',
+      };
+      const file = {
+        filename: 'test',
+        path: 'uploads/image-1758564089477-186878643.jpg',
+      };
+
+      // mocks
+      jest.spyOn(userRepository, 'findOne').mockResolvedValue(null);
+
+      await expect(
+        userService.updateProfileImage(file as any, tokenPayload as any),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw HttpException when an http error occurs', async () => {
+      // arranges
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Jonh',
+      };
+      const file = {
+        filename: 'test',
+        path: 'uploads/image-1758564089477-186878643.jpg',
+      };
+
+      const httpError = new NotFoundException();
+
+      // mocks
+      jest.spyOn(userRepository, 'findOne').mockRejectedValue(httpError);
+
+      await expect(
+        userService.updateProfileImage(file as any, tokenPayload as any),
+      ).rejects.toThrow(HttpException);
+    });
+
+    it('should throw InternalServerErrorException when an unknown error occurs', async () => {
+      // arranges
+      const tokenPayload = {
+        id: randomUUID(),
+        name: 'Jonh',
+      };
+      const file = {
+        filename: 'test',
+        path: 'uploads/image-1758564089477-186878643.jpg',
+      };
+
+      const unknownError = new Error();
+
+      // mocks
+      jest.spyOn(userRepository, 'findOne').mockRejectedValue(unknownError);
+
+      await expect(
+        userService.updateProfileImage(file as any, tokenPayload as any),
+      ).rejects.toThrow(InternalServerErrorException);
     });
   });
 });

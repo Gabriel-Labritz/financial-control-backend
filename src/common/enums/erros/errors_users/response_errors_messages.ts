@@ -7,5 +7,8 @@ export enum responseErrorsUserMessages {
   ERROR_EMPTY_DATA_UPDATE = 'Nenhum informação fornecida para a atualização.',
   ERROR_UPDATE_USER = 'Ocorreu um erro ao atualizar as informações do usuário, tente novamente.',
   ERROR_DELETE_USER = 'Ocorreu um erro ao excluir essa conta, tente novamente.',
+  ERROR_IMAGE_EMPTY = 'Nenhuma imagem foi enviada.',
+  ERROR_IMAGE_SEND = 'Ocorreu um erro ao enviar a imagem, tente novamente.',
+  ERROR_INVALID_FILE_FORMAT = 'Somente arquivos de imagem JPG, JPEG E PNG são permitidos!',
   INTERNAL_SERVER_ERROR = 'Ocorreu um erro interno no servidor, tente novamente.',
 }

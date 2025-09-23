@@ -15,6 +15,8 @@ import { responseErrorsUserMessages } from '../common/enums/erros/errors_users/r
 import { responseUserSuccessMessages } from '../common/enums/success/success_user/response_user_success';
 import { TokenPayloadDto } from '../auth/dto/token_payload.dto';
 import { UpdateUserDto } from './dto/update_user.dto';
+import { join } from 'path';
+import { promises as fsPromises } from 'fs';
 
 @Injectable()
 export class UserService {
@@ -148,6 +150,57 @@ export class UserService {
 
       throw new InternalServerErrorException(
         responseErrorsUserMessages.ERROR_DELETE_USER,
+      );
+    }
+  }
+
+  async updateProfileImage(
+    file: Express.Multer.File,
+    tokenPayload: TokenPayloadDto,
+  ) {
+    try {
+      if (!file) {
+        throw new BadRequestException(
+          responseErrorsUserMessages.ERROR_IMAGE_EMPTY,
+        );
+      }
+
+      const user = await this.userRepository.findOne({
+        where: { id: tokenPayload.id },
+      });
+
+      if (!user) {
+        throw new NotFoundException(responseErrorsUserMessages.USER_NOT_FOUND);
+      }
+
+      if (user.profileImageUrl) {
+        const oldUserImagePath = join(process.cwd(), user.profileImageUrl);
+        try {
+          await fsPromises.unlink(oldUserImagePath);
+        } catch (err) {
+          console.error(`Erro ao excluir o arquivo antigo: ${err}`);
+        }
+      }
+
+      user.profileImageUrl = file.path;
+
+      await this.userRepository.save(user);
+
+      return {
+        message: responseUserSuccessMessages.IMAGE_UPDATED,
+        user: {
+          id: user.id,
+          name: user.name,
+          profileImageUrl: user.profileImageUrl,
+        },
+      };
+    } catch (err) {
+      if (err instanceof HttpException) {
+        throw err;
+      }
+
+      throw new InternalServerErrorException(
+        responseErrorsUserMessages.ERROR_IMAGE_SEND,
       );
     }
   }

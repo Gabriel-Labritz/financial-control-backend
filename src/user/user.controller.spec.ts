@@ -41,6 +41,7 @@ describe('UserController', () => {
             getUser: jest.fn(),
             update: jest.fn(),
             remove: jest.fn(),
+            updateProfileImage: jest.fn(),
           },
         },
       ],
@@ -235,6 +236,54 @@ describe('UserController', () => {
       ).rejects.toThrow(NotFoundException);
       await expect(
         controller.deleteUserAccount(mockResponse, mockTokenPayload as any),
+      ).rejects.toThrow(errorMessage);
+    });
+  });
+
+  describe('uploadProfileImage', () => {
+    it('should call userService.uploadProfileImage with file, token payload, and return success message', async () => {
+      // arranges
+      const file = {
+        filename: 'test',
+        path: 'uploads/image-1758564089477-186878643.jpg',
+      };
+
+      const expectedResponse = { message: 'user updated successfully' };
+
+      // mocks
+      const spyUpdateProfileImageService = jest
+        .spyOn(userService, 'updateProfileImage')
+        .mockResolvedValue(expectedResponse as any);
+
+      // action
+      const result = await controller.uploadProfileImage(
+        file as any,
+        mockTokenPayload as any,
+      );
+
+      // asserts
+      expect(spyUpdateProfileImageService).toHaveBeenCalledWith(
+        file,
+        mockTokenPayload,
+      );
+      expect(result).toEqual(expectedResponse);
+    });
+
+    it('should throw HttpException when userService.uploadProfileImage throw an http error', async () => {
+      // arranges
+      const errorMessage = 'image is missing';
+
+      // mocks
+      jest
+        .spyOn(userService, 'updateProfileImage')
+        .mockRejectedValue(new BadRequestException(errorMessage));
+
+      // actions and asserts
+      await expect(
+        controller.uploadProfileImage(null as any, mockTokenPayload as any),
+      ).rejects.toThrow(BadRequestException);
+      await expect(
+        controller.uploadProfileImage(null as any, mockTokenPayload as any),
       ).rejects.toThrow(errorMessage);
     });
   });
